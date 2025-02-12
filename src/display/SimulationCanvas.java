@@ -1,13 +1,12 @@
 package display;
 
 import life.Lifeform;
+import logic.Cell;
 import logic.Simulation;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
-import java.util.Map;
 
 public class SimulationCanvas extends JPanel {
 
@@ -57,7 +56,8 @@ public class SimulationCanvas extends JPanel {
                     int selectX = e.getX()/pixelSize;
                     int selectY = e.getY()/pixelSize;
 
-                    MainFrame.getInstance().getConsole().println(sim.cellDebug(selectX, selectY));
+                    //#TODO
+                    MainFrame.getInstance().getConsole().println("Reworking");
                     return;
                 }
                 if (buttonPressed != MouseEvent.BUTTON1 && buttonPressed != MouseEvent.BUTTON3) return;
@@ -127,11 +127,10 @@ public class SimulationCanvas extends JPanel {
         int mouseX = mousePosition.x - this.getLocationOnScreen().x;
         int mouseY = mousePosition.y - this.getLocationOnScreen().y;
         if (sim != null) {
-            Lifeform[][] data = sim.getData();
+            Cell[][] data = sim.getData();
             for (int i = 0; i < simWidth; i++)
                 for (int j = 0; j < simHeight; j++) {
-                    if (data[i][j] == null) g.setColor(Color.BLACK);
-                    else g.setColor(data[i][j].getColor());
+                    g.setColor(data[i][j].getColor());
                     g.fillRect(i*pixelSize, j*pixelSize, pixelSize, pixelSize);
                 }
         }

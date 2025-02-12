@@ -2,9 +2,6 @@ package logic;
 
 import display.ConsoleDisplay;
 import display.MainFrame;
-import life.Lifeform;
-
-import java.util.Map;
 
 public class Console {
     private static final String helpLine = "Commands:\n" +
@@ -111,10 +108,8 @@ public class Console {
                 display.println(Simulation.test.toString());
             } break;
             case "count": {
-                display.println("Cell counts: ");
-                for (Map.Entry<Lifeform, Integer> e : sim.getCount()) {
-                    display.println(e.getKey().getTitle() + ": " + e.getValue() + " cells");
-                }
+                //#TODO
+                display.println("Reworking");
             } break;
             case "speed": case "setspeed": case "fps": case "gps": {
                 if (args == null) {

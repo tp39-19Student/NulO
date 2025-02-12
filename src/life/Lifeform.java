@@ -4,6 +4,8 @@ import java.awt.*;
 import java.util.ArrayList;
 
 abstract public class Lifeform {
+    public static final int MAX_RANGE = 3;
+
     protected int id;
     protected static int idTracker = 0;
     protected static ArrayList<Lifeform> all = new ArrayList<>();
