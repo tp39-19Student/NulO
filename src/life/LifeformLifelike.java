@@ -5,16 +5,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LifeformLifelike extends Lifeform {
+    public static Pattern getRulePattern() { return Pattern.compile("B([0-8]*)/S([0-8]*)", Pattern.CASE_INSENSITIVE);}
+
     private boolean[] sRules;
     private boolean[] bRules;
 
     //Rulestring: "B0..8/S0..8"
     //Neighbours: 3x3 Grid
     //Single state
-    public LifeformLifelike(String name, String ruleString, Color color) {
+    protected LifeformLifelike(String name, String ruleString, Color color) {
         super(name, ruleString, new Color[]{color}, 1);
     }
-
 
     @Override
     public boolean s(int neighbours) {
@@ -28,10 +29,9 @@ public class LifeformLifelike extends Lifeform {
 
     @Override
     protected void initRules(String ruleString) {
-        Pattern pattern = Pattern.compile("B([0-8]*)/S([0-8]*)", Pattern.CASE_INSENSITIVE);
-        Matcher m = pattern.matcher(ruleString);
+        Matcher m = getRulePattern().matcher(ruleString);
 
-        if (m.find()) {
+        if (m.matches()) {
             String group1 = m.group(1);
             String group2 = m.group(2);
 

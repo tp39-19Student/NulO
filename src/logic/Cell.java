@@ -3,6 +3,7 @@ package logic;
 import life.Lifeform;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +129,13 @@ public class Cell
             }
         }
 
-        return map.entrySet().stream().sorted((e1, e2)-> {return e1.getValue() - e2.getValue();}).collect(Collectors.toList());
+        List<Map.Entry<Lifeform, Integer>> res = new ArrayList<>(map.entrySet());
+        res.sort((e1, e2) -> {
+            int comp = e2.getValue() - e1.getValue();
+            if (comp == 0) comp = e2.getKey().getId() - e1.getKey().getId();
+            return comp;
+        });
+        return res;
     }
 
     private void notifyNeighbours() {

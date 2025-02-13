@@ -99,13 +99,12 @@ public class Console {
             } break;
             case "new": {
                 MainFrame.getInstance().getCanvas().newSimulation();
-                sim = MainFrame.getInstance().getSimulation();
             } break;
             case "crazy": case "psycho": case "art": {
                 display.println("Crazy brush = " + MainFrame.getInstance().getCanvas().toggleCrazy());
             } break;
             case "life": {
-                display.println(Simulation.test.toString());
+                display.println(Simulation.GOL.toString());
             } break;
             case "count": {
                 //#TODO
@@ -155,6 +154,9 @@ public class Console {
         else {
             display.setInput(history[--historyIndex]);
         }
+    }
+    public void setSimulation(Simulation sim) {
+        this.sim = sim;
     }
 
     public void println(String s) {

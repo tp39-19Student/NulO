@@ -37,7 +37,8 @@ public class SimulationCanvas extends JPanel {
                 height = c.getHeight();
                 simWidth = (width - (width%pixelSize))/pixelSize;
                 simHeight = (height - (height%pixelSize))/pixelSize;
-                c.sim = new Simulation(simWidth, simHeight, c, MainFrame.getInstance().getConsole());
+                c.newSimulation();
+                MainFrame.getInstance().setSelectedLifeform(Simulation.GOL);
             }
         });
         this.addMouseListener(new MouseAdapter() {
@@ -153,8 +154,9 @@ public class SimulationCanvas extends JPanel {
     }
 
     public void newSimulation() {
-        sim.kill();
+        if (sim != null) sim.kill();
         this.sim = new Simulation(simWidth, simHeight, this, MainFrame.getInstance().getConsole());
+        MainFrame.getInstance().getConsole().setSimulation(this.sim);
         this.repaint();
     }
 

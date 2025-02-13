@@ -1,7 +1,11 @@
 package life;
 
+
+import display.MainFrame;
+
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 abstract public class Lifeform {
     public static final int MAX_RANGE = 3;
@@ -24,6 +28,7 @@ abstract public class Lifeform {
         this.initRules(rulestring);
         this.id = idTracker++;
         all.add(this);
+        MainFrame.getInstance().updateLifeformList();
     }
 
 
@@ -47,11 +52,17 @@ abstract public class Lifeform {
 
     @Override
     public String toString() {
-        return "#" + this.id + " - " + this.name + '\n' +
-                this.ruleString;
+        return "#" + this.id + ' ' + this.name + ": " + this.ruleString;
     }
 
     public String getTitle() {
         return "#" + this.id + " - " + this.name;
+    }
+    public int getId() { return this.id; }
+
+    public static Lifeform create(String name, String ruleString, Color color) {
+        if (LifeformLifelike.getRulePattern().matcher(ruleString).matches()) return new LifeformLifelike(name, ruleString, color);
+
+        return null;
     }
 }

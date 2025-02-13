@@ -1,8 +1,8 @@
 package logic;
 
+import display.MainFrame;
 import display.SimulationCanvas;
 import life.Lifeform;
-import life.LifeformLifelike;
 
 import java.awt.*;
 import java.util.*;
@@ -10,8 +10,14 @@ import java.util.Timer;
 
 public class Simulation
 {
-    private static final int defaultSpeed = 45; //FPS
-    public static Lifeform test = new LifeformLifelike("test", "B3/S23", new Color(0, 124, 0));
+    public static final int DEFAULT_SPEED = 45; //FPS
+    public static Lifeform GOL = Lifeform.create("Conway's Life", "B3/S23", new Color(0, 124, 0));
+    public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23", new Color(116, 116, 116));
+    public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678", new Color(218, 137, 86));
+    public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12", new Color(210, 194, 59));
+    public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678", new Color(96, 8, 83));
+
+
 
     private final int width;
     private final int height;
@@ -41,8 +47,9 @@ public class Simulation
                 data[i][j].initNeighbourRings(data);
 
         this.running = false;
-        this.canvas.setLifeformBrush(test); //!!!!!!
-        this.fps = defaultSpeed;
+        MainFrame.getInstance().updatePlayPause(this.running);
+        this.fps = DEFAULT_SPEED;
+        updateSpeedLabel();
     }
 
     public void play() {
@@ -55,12 +62,14 @@ public class Simulation
             public void run() {
                 s.nextFrame();
             }
-        }, 1000 / fps, 1000 / fps);
+        }, 0, 1000 / fps);
+        MainFrame.getInstance().updatePlayPause(this.running);
     }
     public void pause() {
         if (!this.running) return;
         this.running = false;
         if (timer != null) timer.cancel();
+        MainFrame.getInstance().updatePlayPause(this.running);
     }
 
     public void togglePlayPause() {
@@ -104,21 +113,52 @@ public class Simulation
 
     public void setFps(int fps) {
         this.fps = fps;
+        updateSpeedLabel();
         if (this.running) {
             pause();
             play();
         }
+    }
+    public void setFps(String fps) {
+        int f = -1;
+        try {
+            f = Integer.parseInt(fps);
+        } catch (NumberFormatException e) {}
+
+        if (f > 0 && f <= 1000) setFps(f);
+        else updateSpeedLabel();
+    }
+
+    private void updateSpeedLabel() {
+        MainFrame.getInstance().updateSpeedLabel(this.fps + "");
     }
 
     private static final int[] speeds = new int[] {10, 45, 120};
     public void toggleFps() {
         for (int speed : speeds)
             if (fps < speed) {
-                console.command("fps " + speed);
+                setFps(speed);
                 return;
             }
-        console.command("fps " + speeds[0]);
+        setFps(speeds[0]);
+    }
+    public void fpsUp() {
+        for (int speed : speeds) {
+            if (fps < speed) {
+                setFps(speed);
+                return;
+            }
+        }
+    }
+    public void fpsDown() {
+        for (int i = speeds.length - 1; i >= 0; i--) {
+            if (fps > speeds[i]) {
+                setFps(speeds[i]);
+                return;
+            }
+        }
     }
 
     public int getFps() {return this.fps;}
+    public boolean getRunning() {return  this.running;}
 }

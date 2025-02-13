@@ -1,11 +1,14 @@
 package display;
 
+import life.Lifeform;
 import logic.Console;
 import logic.Simulation;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 /*
 c = new GridBagConstraints(
@@ -24,6 +27,20 @@ c = new GridBagConstraints(
  */
 
 public class MainFrame extends JFrame {
+    private static final Color backgroundColor = new Color(55, 55, 111);
+
+    private static final Color inactiveColor = new Color(72, 72, 72);
+    private static final Color quitColor = new Color(201, 60, 60);
+
+    private static final Color playColor = new Color(105, 228, 83);
+    private static final Color pauseColor = new Color(210, 96, 96);
+    private static final Color speedChangeColor = new Color(104, 104, 143);
+
+    private static final Color patternToolColor = new Color(115, 103, 208);
+    private static final Color newColor = new Color(149, 221, 147);
+
+    private static final String FONT_NAME = Font.MONOSPACED;
+
     private static MainFrame mainFrame = null;
     private static final int height = Toolkit.getDefaultToolkit().getScreenSize().height;
     private static final int width = Toolkit.getDefaultToolkit().getScreenSize().width;
@@ -32,17 +49,23 @@ public class MainFrame extends JFrame {
     private final SimulationCanvas canvas;
     private final ConsoleDisplay console;
 
+    private final JTextField speedLabel;
+    private final JButton playPauseButton;
+    private final JList<Lifeform> brushList;
+    private final DefaultListModel<Lifeform> brushListModel;
+
     private MainFrame() {
         super();
         JFrame window = this;
 
-        this.setPreferredSize(new Dimension(width, height));
         this.setUndecorated(true);
+        this.setResizable(false);
+
+        this.setPreferredSize(new Dimension(width, height));
 
         this.pack();
         this.setLocationRelativeTo(null);
 
-        this.setResizable(false);
 
 
         this.setLayout(new GridBagLayout());
@@ -72,77 +95,148 @@ public class MainFrame extends JFrame {
                 GridBagConstraints.RELATIVE,                        //gridY
                 1,                                                  //gridWidth
                 1,                                                  //gridHeight
-                0.4,                                                //weightX
+                0.1,                                                //weightX
                 0.125,                                                //weightY
                 GridBagConstraints.CENTER,                //anchor
                 GridBagConstraints.BOTH,                            //fill
-                new Insets(margin, 0,margin, margin),        //insets
+                new Insets(margin, 0,0, margin),        //insets
                 0,                                                  //ipadX
                 0                                                   //ipadY
         );
 
-        Font buttonFont = new Font(Font.MONOSPACED, Font.BOLD, 30);
+        Font buttonFont = new Font(FONT_NAME, Font.BOLD, 30);
 
-        button = new JButton("RULESETS");
-        button.setFont(buttonFont);
-        button.setBackground(new Color(60, 112, 201));
-        button.setFocusPainted(false);
-        this.add(button, c);
 
-        button = new JButton("2");
+        JPanel buttonSet = new JPanel(new GridLayout(1, 2));
+        button = new JButton("INSERT PATTERN");
         button.setFont(buttonFont);
-        button.setBackground(new Color(72, 72, 72));
+        button.setBackground(patternToolColor);
         button.setFocusPainted(false);
-        this.add(button, c);
+        buttonSet.add(button);
+        button = new JButton("NEW PATTERN");
+        button.setFont(buttonFont);
+        button.setBackground(newColor);
+        button.setFocusPainted(false);
+        buttonSet.add(button);
 
-        button = new JButton("3");
-        button.setFont(buttonFont);
-        button.setBackground(new Color(72, 72, 72));
-        button.setFocusPainted(false);
-        this.add(button, c);
+        this.add(buttonSet, c);
 
-        button = new JButton("4");
-        button.setFont(buttonFont);
-        button.setBackground(new Color(72, 72, 72));
-        button.setFocusPainted(false);
-        this.add(button, c);
+        JPanel brushPanel = new JPanel(new BorderLayout());
 
-        button = new JButton("QUIT");
-        button.setFont(buttonFont);
-        button.setForeground(Color.WHITE);
-        button.setBackground(new Color(201, 60, 60));
-        button.addActionListener(e -> window.dispose());
-        button.setFocusPainted(false);
-        this.add(button, c);
+        brushListModel = new DefaultListModel<>();
+        brushList = new JList<>(brushListModel);
+        brushList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        brushList.setFont(buttonFont.deriveFont(18F));
+
+        brushList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                canvas.setLifeformBrush(this.brushList.getSelectedValue());
+                getConsole().println("Selected: " + this.brushListModel.get(this.brushList.getSelectedIndex()));
+            }
+        });
+
+        brushPanel.add(new JScrollPane(brushList), BorderLayout.CENTER);
+
+        JPanel newLifePanel = new JPanel();
+        brushPanel.add(newLifePanel, BorderLayout.SOUTH);
+
+        this.add(brushPanel, c);
 
         this.console = new ConsoleDisplay();
 
-        c = new GridBagConstraints(
+        GridBagConstraints consoleC = new GridBagConstraints(
                 1,                                                  //gridX
                 GridBagConstraints.RELATIVE,                        //gridY
                 1,                                                  //gridWidth
                 3,                                                  //gridHeight
-                0.4,                                                //weightX
+                0.1,                                                //weightX
                 0.625,                                                //weightY
                 GridBagConstraints.CENTER,                //anchor
                 GridBagConstraints.BOTH,                            //fill
-                new Insets(margin, 0,margin, margin),        //insets
+                new Insets(2*margin, 0,margin, margin),        //insets
                 0,                                                  //ipadX
                 0                                                   //ipadY
         );
 
-        this.add(this.console, c);
+        this.add(this.console, consoleC);
+
+        JPanel simControl = new JPanel(new GridLayout(1, 3));
+
+        button = new JButton("⏯");
+        button.setFont(buttonFont.deriveFont(50F));
+        button.setBackground(playColor);
+        button.setFocusPainted(false);
+        playPauseButton = button;
+
+        button.addActionListener(a -> {
+            MainFrame.getInstance().getSimulation().togglePlayPause();
+        });
+        simControl.add(button);
+
+        JPanel speedControl = new JPanel(new GridLayout(3, 1));
+
+        button = new JButton("▲");
+        button.setFont(buttonFont);
+        button.setBackground(speedChangeColor);
+        button.setFocusPainted(false);
+        button.addActionListener(a -> {
+            MainFrame.getInstance().getSimulation().fpsUp();
+        });
+        speedControl.add(button);
+
+        JPanel speedValuePanel = new JPanel(new BorderLayout());
+        speedLabel = new JTextField(Simulation.DEFAULT_SPEED + "", 4);
+        speedLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        speedLabel.setFont(buttonFont);
+        speedLabel.addActionListener(e -> {
+            MainFrame.getInstance().getSimulation().setFps(speedLabel.getText());
+        });
+        speedLabel.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                MainFrame.getInstance().getSimulation().setFps(speedLabel.getText());
+            }
+        });
+        //JScrollPane scroll = new JScrollPane(speedLabel);
+        speedValuePanel.add(speedLabel, BorderLayout.CENTER);
+        JLabel genS = new JLabel(" Gen/s ");
+        genS.setFont(buttonFont);
+        speedValuePanel.add(genS, BorderLayout.EAST);
+        speedControl.add(speedValuePanel);
+
+        button = new JButton("▼");
+        button.setFont(buttonFont);
+        button.setBackground(speedChangeColor);
+        button.setFocusPainted(false);
+        button.addActionListener(a -> {
+            MainFrame.getInstance().getSimulation().fpsDown();
+        });
+        speedControl.add(button);
+
+        simControl.add(speedControl);
+        c.weighty = 0.02;
+        this.add(simControl, c);
+
+        c.weighty = 0.125;
+        c.insets = new Insets(5*margin, 0, margin, margin);
+        button = new JButton("QUIT");
+        button.setFont(buttonFont);
+        button.setForeground(Color.WHITE);
+        button.setBackground(quitColor);
+        button.addActionListener(e -> window.dispose());
+        button.setFocusPainted(false);
+        this.add(button, c);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.getContentPane().setBackground(new Color(55, 55, 111));
+        this.getContentPane().setBackground(backgroundColor);
 
         this.setVisible(true);
 
         GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0].setFullScreenWindow(this);
-        //System.out.println(this.getInsets().toString());
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e-> {
-                if (!console.inputFocused() && e.getID() == KeyEvent.KEY_PRESSED) {
+                if (!console.inputFocused() && !speedLabel.hasFocus() && e.getID() == KeyEvent.KEY_PRESSED) {
                     int keyCode = e.getKeyCode();
                     //console.println("Pushed key: " + keyCode);
                     Console cmd = console.getConsole();
@@ -170,6 +264,25 @@ public class MainFrame extends JFrame {
     }
     public Console getConsole() {
         return this.console.getConsole();
+    }
+    public void updateSpeedLabel(String speed) {
+        this.speedLabel.setText(speed);
+        this.speedLabel.revalidate();
+    }
+    public void updatePlayPause(boolean running) {
+        if (running) playPauseButton.setBackground(pauseColor);
+        else playPauseButton.setBackground(playColor);
+    }
+    public void updateLifeformList() {
+        brushListModel.clear();
+        for (Lifeform l : Lifeform.getAll()) brushListModel.addElement(l);
+        brushList.revalidate();
+    }
+    public Lifeform getSelectedLifeform() {
+        return this.brushList.getSelectedValue();
+    }
+    public void setSelectedLifeform(Lifeform l) {
+        this.brushList.setSelectedValue(l, true);
     }
 
     public static MainFrame getInstance() {
