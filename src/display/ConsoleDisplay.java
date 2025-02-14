@@ -63,20 +63,14 @@ public class ConsoleDisplay extends JPanel {
         this.setBackground(consoleInputBackgroundColor);
     }
 
-    public void clear() {
-        this.text.setText("");
-    }
+    public void clear() { this.text.setText(""); }
+
     public void println(String line) {
         this.text.append(line + '\n');
         textScroll.setValue(textScroll.getMaximum());
     }
-    public Console getConsole() {return this.console;}
 
-    public void setInput(String text) {
-        this.input.setText(text);
-    }
-
-    public boolean inputFocused() {
-        return this.input.hasFocus();
-    }
+    public boolean inputFocused() { return this.input.hasFocus(); }
+    public Console getConsole() { return this.console; }
+    public void setInput(String text) { this.input.setText(text); }
 }

@@ -60,85 +60,67 @@ public class Console {
         key = key.toLowerCase();
 
         switch (key) {
-            case "clear": display.clear(); break;
-            case "echo": display.println(args); break;
-            case "help": display.println(helpLine); break;
-            case "simdim": case "dim": {
-                display.println("Simulation fits " + sim.getWidth() + " x " + sim.getHeight() + " cells");
-            } break;
-            case "play": case "run": case "start": case "resume": sim.play(); break;
-            case "pause": case "stop": sim.pause(); break;
-            case "exit": case"quit": MainFrame.getInstance().dispose(); break;
+            case "clear":
+                display.clear(); break;
+            case "echo":
+                display.println(args); break;
+            case "help":
+                display.println(helpLine); break;
+            case "simdim": case "dim":
+                display.println("Simulation fits " + sim.getWidth() + " x " + sim.getHeight() + " cells"); break;
+            case "play": case "run": case "start": case "resume":
+                sim.play(); break;
+            case "pause": case "stop":
+                sim.pause(); break;
+            case "exit": case"quit":
+                MainFrame.getInstance().dispose(); break;
             case "setsize": {
                 if (args == null) {
                     display.println("Usage: setsize <Number>\nSet the size of a single cell to NxN pixels, will restart the simulation.");
                     return;
                 }
-                String s = null;
+                String s = args.split(" ")[0];;
                 try {
-                    s = args.split(" ")[0];
                     int size = Integer.parseInt(s);
-                    if (MainFrame.getInstance().getCanvas().getPixelSize() == size) {
-                        display.println("Size is already " + size);
-                        return;
-                    }
-                    if (size <= 0) {
-                        display.println("Size must be greater than 0");
-                        return;
-                    }
-                    else {
-                        MainFrame.getInstance().getCanvas().setPixelSize(size);
-                        this.sim = MainFrame.getInstance().getSimulation();
-                        display.println("Size set to " + size);
-                    }
-                } catch (NumberFormatException e) {display.println(s + " is not an integer.");}
-            } break;
+                    if (MainFrame.getInstance().getCanvas().getPixelSize() == size) { display.println("Size is already " + size); return; }
+                    if (size <= 0) { display.println("Size must be greater than 0"); return; }
+
+                    boolean res = MainFrame.getInstance().getCanvas().setPixelSize(size);
+                    if (!res) { display.println("Size too large"); return; }
+                    this.sim = MainFrame.getInstance().getSimulation();
+                    display.println("Size set to " + size);
+                } catch (NumberFormatException e) {display.println(s + " is not an integer.");}} break;
             case "getsize": case "size": {
                 int size = MainFrame.getInstance().getCanvas().getPixelSize();
-                display.println("Current size of a single cell: " + size + "x" + size + " pixels");
-            } break;
-            case "new": {
-                MainFrame.getInstance().getCanvas().newSimulation();
-            } break;
-            case "crazy": case "psycho": case "art": {
-                display.println("Crazy brush = " + MainFrame.getInstance().getCanvas().toggleCrazy());
-            } break;
-            case "life": {
-                display.println(Simulation.GOL.toString());
-            } break;
+                display.println("Current size of a single cell: " + size + "x" + size + " pixels");} break;
+            case "new":
+                MainFrame.getInstance().getCanvas().newSimulation(); break;
+            case "crazy": case "psycho": case "art":
+                display.println("Crazy brush = " + MainFrame.getInstance().getCanvas().toggleCrazy()); break;
+            case "life":
+                display.println(Simulation.GOL.toString());break;
             case "count": {
                 //#TODO
-                display.println("Reworking");
-            } break;
+                display.println("Reworking");} break;
             case "speed": case "setspeed": case "fps": case "gps": {
                 if (args == null) {
                     display.println("Usage: speed <Number>\nSet the speed to N generations per second.");
                     return;
                 }
-                String s = null;
+                String s = args.split(" ")[0];
                 try {
-                    s = args.split(" ")[0];
                     int speed = Integer.parseInt(s);
-                    if (sim.getFps() == speed) {
-                        display.println("Speed is already " + speed);
-                        return;
-                    }
-                    if (speed <= 0) {
-                        display.println("Speed must be greater than 0");
-                        return;
-                    }
-                    if (speed > 1000) {
-                        display.println("Speed cannot be greater than 1000");
-                        return;
-                    }
-                    else {
-                        sim.setFps(speed);
-                        display.println("Speed set to " + speed + " generations per second");
-                    }
-                } catch (NumberFormatException e) {display.println(s + " is not an integer.");}
-            } break;
-            case "next": case "f": case "frame": sim.pause(); sim.nextFrame(); break;
-            default: display.println("Unknown command: " + (cmd.length()<20?cmd:"..."));
+                    if (sim.getFps() == speed) { display.println("Speed is already " + speed); return; }
+                    if (speed <= 0) { display.println("Speed must be greater than 0"); return; }
+                    if (speed > 1000) { display.println("Speed cannot be greater than 1000"); return; }
+
+                    sim.setFps(speed);
+                    display.println("Speed set to " + speed + " generations per second");
+                } catch (NumberFormatException e) {display.println(s + " is not an integer.");}} break;
+            case "next": case "f": case "frame": {
+                sim.pause(); sim.nextFrame();} break;
+            default:
+                display.println("Unknown command: " + (cmd.length()<20?cmd:"..."));
         }
     }
 
@@ -155,11 +137,10 @@ public class Console {
             display.setInput(history[--historyIndex]);
         }
     }
-    public void setSimulation(Simulation sim) {
-        this.sim = sim;
-    }
 
     public void println(String s) {
         display.println(s);
     }
+
+    public void setSimulation(Simulation sim) { this.sim = sim; }
 }

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Cell
 {
@@ -15,12 +14,14 @@ public class Cell
     private final int x;
     private final int y;
     private Lifeform life;
+    private int state;
+    private int nextState;
 
     private Lifeform nextLife;
 
     private boolean dirty;
 
-    private Cell[][] neighbourRings;
+    private final Cell[][] neighbourRings;
 
     public Cell(int x, int y) {
         this(x, y, null);
@@ -29,6 +30,8 @@ public class Cell
     public Cell(int x, int y, Lifeform life) {
         this.x = x;
         this.y = y;
+        this.state = 0;
+        this.nextState = 0;
         this.life = life;
         this.dirty = false;
 
@@ -69,52 +72,60 @@ public class Cell
 
         // S Logic
         if (this.life != null) {
+            if (this.state > 1) {
+                this.nextState = (this.state + 1) % (this.life.getStates() + 1);
+                return;
+            }
+
             int neighbourCount = 0;
             for (int i = 0; i < this.life.getRange(); i++) {
                 Cell[] ring = this.neighbourRings[i];
-
                 for (Cell neighbour: ring) {
-                    if (neighbour.life != null) neighbourCount++;
+                    if (neighbour.life != null && neighbour.state == 1) neighbourCount++;
                 }
             }
-
             if (!this.life.s(neighbourCount)) {
-                this.nextLife = null;
+                this.nextState = (this.state + 1) % (this.life.getStates() + 1);
             }
         }
+
         // B Logic
         else {
             List<Map.Entry<Lifeform, Integer>> mates = findMates();
             if (mates.isEmpty()) return;
-
             int[] neighbourCounts = new int[Lifeform.MAX_RANGE];
             for (int i = 0; i < Lifeform.MAX_RANGE; i++) {
                 if (i != 0) neighbourCounts[i] = neighbourCounts[i-1];
                 Cell[] ring = neighbourRings[i];
-                for (Cell neighbour : ring) if (neighbour.life != null) neighbourCounts[i]++;
+                for (Cell neighbour : ring) if (neighbour.life != null && neighbour.state == 1) neighbourCounts[i]++;
             }
-
             for (Map.Entry<Lifeform, Integer> mate : mates) {
                 Lifeform l = mate.getKey();
                 if (l.b(neighbourCounts[l.getRange() - 1])) {
                     this.nextLife = l;
+                    this.nextState = 1;
                     return;
                 }
             }
         }
     }
 
-    public void updateCommit() {
-        setCell(this.nextLife);
-    }
+    public void updateCommit() { setCell(); }
 
-    public void setCell(Lifeform life) {
-        if (life != this.life) {
-            this.life = life;
-            this.nextLife = life;
+    private void setCell() {
+        if (nextLife != this.life || nextState != this.state) {
+            this.state = nextState;
+            if (this.state == 0) this.life = null;
+            else  this.life = nextLife;
             this.dirty = true;
             notifyNeighbours();
         }
+    }
+    public void setCell(Lifeform life) {
+        this.nextLife = life;
+        if (life != null) this.nextState = 1;
+        else this.nextState = 0;
+        setCell();
     }
 
     private List<Map.Entry<Lifeform, Integer>> findMates() {
@@ -123,7 +134,7 @@ public class Cell
             Cell[] ring = this.neighbourRings[i];
             for (Cell neighbour : ring) {
                 Lifeform neighbourLife = neighbour.life;
-                if (neighbourLife != null && neighbourLife.getRange() > i) {
+                if (neighbourLife != null && neighbourLife.getRange() > i && neighbour.state == 1) {
                     map.put(neighbourLife, map.getOrDefault(neighbourLife, 0) + 1);
                 }
             }
@@ -132,16 +143,16 @@ public class Cell
         List<Map.Entry<Lifeform, Integer>> res = new ArrayList<>(map.entrySet());
         res.sort((e1, e2) -> {
             int comp = e2.getValue() - e1.getValue();
-            if (comp == 0) comp = e2.getKey().getId() - e1.getKey().getId();
+            if (comp == 0) comp = e2.getKey().getId() - e1.getKey().getId(); //#TODO
             return comp;
         });
+
         return res;
     }
 
     private void notifyNeighbours() {
         for (int i = 0; i < Lifeform.MAX_RANGE; i++) {
             Cell[] ring = this.neighbourRings[i];
-
             for (Cell neighbour : ring) {
                 Lifeform neighbourLife = neighbour.life;
                 if (neighbourLife == null || neighbourLife.getRange() > i) neighbour.dirty = true;
@@ -150,7 +161,12 @@ public class Cell
     }
 
     public Color getColor() {
-        if (this.life == null) return Color.BLACK;
-        return this.life.getColor();
+        if (this.state == 0) return Color.BLACK;
+        try {
+            return this.life.getColor(this.state - 1);
+        }
+        catch (NullPointerException e) {
+            return Color.BLACK;
+        }
     }
 }

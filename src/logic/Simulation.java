@@ -16,8 +16,8 @@ public class Simulation
     public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678", new Color(218, 137, 86));
     public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12", new Color(210, 194, 59));
     public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678", new Color(96, 8, 83));
-
-
+    public static Lifeform STW6 = Lifeform.create("Like Starwars", "B278/S3456/6", new Color(57, 122, 230));
+    public static Lifeform FRWK = Lifeform.create("Fireworks", "B13/S2/C21", new Color(163, 29, 244));
 
     private final int width;
     private final int height;
@@ -29,8 +29,6 @@ public class Simulation
 
     private final SimulationCanvas canvas;
     private final Console console;
-
-    //private HashMap<Lifeform, Integer> lifeformCount;
 
     public Simulation(int width, int height, SimulationCanvas canvas, Console console) {
         this.width = width;
@@ -52,6 +50,23 @@ public class Simulation
         updateSpeedLabel();
     }
 
+    public void setCell(int x, int y, Lifeform life) {
+        if (x < 0 || y < 0 || x >= data.length || y >= data[0].length) return;
+        data[x][y].setCell(life);
+    }
+
+    public void nextFrame() {
+        for (int i = 0; i < width; i++)
+            for (int j = 0; j < height; j++)
+                data[i][j].updateCalculate();
+
+        for (int i = 0; i < width; i++)
+            for (int j = 0; j < height; j++)
+                data[i][j].updateCommit();
+
+        canvas.repaint();
+    }
+
     public void play() {
         if (this.running) return;
         Simulation s = this;
@@ -71,44 +86,13 @@ public class Simulation
         if (timer != null) timer.cancel();
         MainFrame.getInstance().updatePlayPause(this.running);
     }
-
     public void togglePlayPause() {
         if (this.running) pause();
         else play();
     }
-
     public void kill() {
         this.running = false;
         if (timer != null) timer.cancel();
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public Cell[][] getData() {
-        return data;
-    }
-
-    public void setCell(int x, int y, Lifeform life) {
-        if (x < 0 || y < 0 || x >= data.length || y >= data[0].length) return;
-        data[x][y].setCell(life);
-    }
-
-    public void nextFrame() {
-        for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
-                data[i][j].updateCalculate();
-
-        for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
-                data[i][j].updateCommit();
-
-        canvas.repaint();
     }
 
     public void setFps(int fps) {
@@ -123,14 +107,10 @@ public class Simulation
         int f = -1;
         try {
             f = Integer.parseInt(fps);
-        } catch (NumberFormatException e) {}
+        } catch (NumberFormatException ignored) {}
 
         if (f > 0 && f <= 1000) setFps(f);
         else updateSpeedLabel();
-    }
-
-    private void updateSpeedLabel() {
-        MainFrame.getInstance().updateSpeedLabel(this.fps + "");
     }
 
     private static final int[] speeds = new int[] {10, 45, 120};
@@ -158,7 +138,13 @@ public class Simulation
             }
         }
     }
+    private void updateSpeedLabel() {
+        MainFrame.getInstance().updateSpeedLabel(this.fps + "");
+    }
 
     public int getFps() {return this.fps;}
     public boolean getRunning() {return  this.running;}
+    public int getHeight() { return height; }
+    public int getWidth() { return width; }
+    public Cell[][] getData() { return data; }
 }
