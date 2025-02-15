@@ -2,6 +2,7 @@ package logic;
 
 import display.ConsoleDisplay;
 import display.MainFrame;
+import life.Lifeform;
 
 public class Console {
     private static final String helpLine = "Commands:\n" +
@@ -98,7 +99,7 @@ public class Console {
             case "crazy": case "psycho": case "art":
                 display.println("Crazy brush = " + MainFrame.getInstance().getCanvas().toggleCrazy()); break;
             case "life":
-                display.println(Simulation.GOL.toString());break;
+                display.println(Lifeform.GOL.toString());break;
             case "count": {
                 //#TODO
                 display.println("Reworking");} break;

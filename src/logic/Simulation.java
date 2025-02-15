@@ -11,13 +11,6 @@ import java.util.Timer;
 public class Simulation
 {
     public static final int DEFAULT_SPEED = 45; //FPS
-    public static Lifeform GOL = Lifeform.create("Conway's Life", "B3/S23", new Color(0, 124, 0));
-    public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23", new Color(116, 116, 116));
-    public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678", new Color(218, 137, 86));
-    public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12", new Color(210, 194, 59));
-    public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678", new Color(96, 8, 83));
-    public static Lifeform STW6 = Lifeform.create("Like Starwars", "B278/S3456/6", new Color(57, 122, 230));
-    public static Lifeform FRWK = Lifeform.create("Fireworks", "B13/S2/C21", new Color(163, 29, 244));
 
     private final int width;
     private final int height;

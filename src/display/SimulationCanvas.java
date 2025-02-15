@@ -50,7 +50,7 @@ public class SimulationCanvas extends JPanel {
                 extraY = height - simEndY;
 
                 c.newSimulation();
-                MainFrame.getInstance().setSelectedLifeform(Simulation.GOL);
+                MainFrame.getInstance().setSelectedLifeform(Lifeform.GOL);
             }
         });
         this.addMouseListener(new MouseAdapter() {
