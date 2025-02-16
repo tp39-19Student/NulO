@@ -12,14 +12,17 @@ public class MainFrame extends JFrame {
     public static final Color backgroundColor = new Color(55, 55, 111);
 
     private static final Color inactiveColor = new Color(72, 72, 72);
-    private static final Color quitColor = new Color(201, 60, 60);
+    private static final Color quitColor = new Color(177, 55, 55);
 
-    private static final Color playColor = new Color(105, 228, 83);
-    private static final Color pauseColor = new Color(210, 96, 96);
+    private static final Color playColor = new Color(49, 128, 32);
+    private static final Color pauseColor = quitColor;
     private static final Color speedChangeColor = new Color(104, 104, 143);
 
     private static final Color patternToolColor = new Color(115, 103, 208);
     private static final Color newColor = new Color(149, 221, 147);
+
+    private static final Color lifeformListColor = new Color(39, 39, 71);
+    private static final Color lifeformListSelectColor = backgroundColor.brighter();
 
     private static final Font mainFont = new Font(Font.MONOSPACED, Font.PLAIN, 30);
 
@@ -97,21 +100,86 @@ public class MainFrame extends JFrame {
         this.add(buttonSet, c);
 
         // ======= Lifeform Brush =======
-        JPanel brushPanel = new JPanel(new BorderLayout());
+        JPanel brushPanel = new JPanel(new BorderLayout(0, margin));
+        brushPanel.setBackground(backgroundColor);
+        brushPanel.setBorder(null);
         brushListModel = new DefaultListModel<>();
         brushList = new JList<>(brushListModel);
+        brushList.setBackground(lifeformListColor);
+        brushList.setBorder(null);
+        brushList.setSelectionBackground(lifeformListSelectColor);
         brushList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         brushList.setFont(mainFont.deriveFont(18F));
         brushList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 canvas.setLifeformBrush(this.brushList.getSelectedValue());
-                getConsole().println("Selected: " + this.brushListModel.get(this.brushList.getSelectedIndex()));
             }
         });
-        brushPanel.add(new JScrollPane(brushList), BorderLayout.CENTER);
+        brushList.setVisibleRowCount(8);
+        JScrollPane listScrollPane = new JScrollPane(brushList);
+        listScrollPane.setBackground(backgroundColor);
+        listScrollPane.setBorder(null);
+        JScrollBar vertical = listScrollPane.getVerticalScrollBar();
+        vertical.setBackground(lifeformListColor);
+        brushPanel.add(listScrollPane, BorderLayout.CENTER);
 
         // ======= New Lifeform =======
-        JPanel newLifePanel = new JPanel(); //#TODO
+        JPanel newLifePanel = new JPanel(new BorderLayout(5, 0));
+        newLifePanel.setBackground(backgroundColor);
+        Font newLifeFont = mainFont.deriveFont(20F);
+
+        class JTextFieldHinted extends JTextField {
+            private final String hint;
+            private int fontHeight = -1;
+
+            public JTextFieldHinted(int i, String hint) {
+                super(i);
+                this.hint = hint;
+            }
+
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                if (this.getText().isEmpty()) {
+                    if (this.fontHeight == -1) this.fontHeight = g.getFontMetrics().getAscent();
+                    g.setFont(this.getFont());
+                    g.setColor(Color.LIGHT_GRAY);
+                    g.drawString(this.hint, 5, ((this.getHeight() + this.fontHeight) / 2) - 3 );
+                }
+            }
+        }
+
+        JTextField newLifeName = new JTextFieldHinted(15, "Lifeform Name");
+        newLifeName.setBorder(null);
+        newLifeName.setFont(newLifeFont);
+        newLifeName.setForeground(Color.CYAN);
+        newLifeName.setBackground(lifeformListColor);
+        newLifeName.setCaretColor(Color.CYAN);
+
+        JTextField newLifeRulestring = new JTextFieldHinted(30, "Lifeform Rules");
+        newLifeRulestring.setBorder(null);
+        newLifeRulestring.setFont(newLifeFont);
+        newLifeRulestring.setForeground(Color.WHITE);
+        newLifeRulestring.setBackground(lifeformListColor);
+        newLifeRulestring.setCaretColor(Color.WHITE);
+
+        JButton newLifeButton = new JButton("ADD");
+        newLifeButton.setFont(newLifeFont);
+        newLifeButton.setBackground(newColor);
+        newLifeButton.addActionListener(a -> {
+            if (newLifeName.getText().isEmpty() || newLifeRulestring.getText().isEmpty()) return;
+            Lifeform newLifeform = Lifeform.create(newLifeName.getText(), newLifeRulestring.getText());
+            if (newLifeform != null) {
+                newLifeName.setText("");
+                newLifeRulestring.setText("");
+                setSelectedLifeform(newLifeform);
+            }
+        });
+
+        newLifePanel.add(newLifeName, BorderLayout.WEST);
+        newLifePanel.add(newLifeRulestring, BorderLayout.CENTER);
+        newLifePanel.add(newLifeButton, BorderLayout.EAST);
+
         brushPanel.add(newLifePanel, BorderLayout.SOUTH);
         this.add(brushPanel, c);
 
@@ -134,6 +202,7 @@ public class MainFrame extends JFrame {
 
         // ======= Speed Controls =======
         JPanel simControl = new JPanel(new GridLayout(1, 3));
+        simControl.setBackground(backgroundColor);
         button = new JButton("⏯");
         button.setFont(mainFont.deriveFont(50F));
         button.setBackground(playColor);
@@ -143,16 +212,22 @@ public class MainFrame extends JFrame {
         simControl.add(button);
 
         JPanel speedControl = new JPanel(new GridLayout(3, 1));
+        speedControl.setBackground(backgroundColor);
         button = new JButton("▲");
         button.setFont(mainFont);
-        button.setBackground(speedChangeColor);
+        button.setBackground(lifeformListSelectColor);
+        button.setForeground(Color.LIGHT_GRAY);
         button.setFocusPainted(false);
         button.addActionListener(a -> MainFrame.getInstance().getSimulation().fpsUp());
         speedControl.add(button);
         JPanel speedValuePanel = new JPanel(new BorderLayout());
+        speedValuePanel.setBackground(backgroundColor);
         speedLabel = new JTextField(Simulation.DEFAULT_SPEED + "", 4);
         speedLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        speedLabel.setBackground(lifeformListColor);
+        speedLabel.setBorder(null);
         speedLabel.setFont(mainFont);
+        speedLabel.setForeground(Color.LIGHT_GRAY);
         speedLabel.addActionListener(e -> MainFrame.getInstance().getSimulation().setFps(speedLabel.getText()));
         speedLabel.addFocusListener(new FocusAdapter() {
             @Override
@@ -164,11 +239,13 @@ public class MainFrame extends JFrame {
         speedValuePanel.add(speedLabel, BorderLayout.CENTER);
         JLabel genS = new JLabel(" Gen/s ");
         genS.setFont(mainFont);
+        genS.setForeground(Color.lightGray);
         speedValuePanel.add(genS, BorderLayout.EAST);
         speedControl.add(speedValuePanel);
         button = new JButton("▼");
         button.setFont(mainFont);
-        button.setBackground(speedChangeColor);
+        button.setBackground(lifeformListSelectColor);
+        button.setForeground(Color.LIGHT_GRAY);
         button.setFocusPainted(false);
         button.addActionListener(a -> MainFrame.getInstance().getSimulation().fpsDown());
         speedControl.add(button);
@@ -205,22 +282,21 @@ public class MainFrame extends JFrame {
 
         // ======= Hotkeys =======
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e-> {
-                if (!console.inputFocused() && !speedLabel.hasFocus() && e.getID() == KeyEvent.KEY_PRESSED) {
-                    int keyCode = e.getKeyCode();
-                    Simulation sim = canvas.getSimulation();
-                    switch (keyCode) {
-                        case KeyEvent.VK_SPACE: sim.togglePlayPause(); break;
-                        case KeyEvent.VK_TAB: sim.toggleFps(); break;
-                        case KeyEvent.VK_F: sim.pause(); sim.nextFrame(); break;
-                        default: return false;
-                    }
-                    e.consume();
-                    return true;
+            if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) return false;
+            if (e.getID() == KeyEvent.KEY_PRESSED) {
+                int keyCode = e.getKeyCode();
+                Simulation sim = canvas.getSimulation();
+                switch (keyCode) {
+                    case KeyEvent.VK_SPACE: sim.togglePlayPause(); break;
+                    case KeyEvent.VK_TAB: sim.toggleFps(); break;
+                    case KeyEvent.VK_F: sim.pause(); sim.nextFrame(); break;
+                    default: return false;
                 }
-                return false;
+                e.consume();
+                return true;
             }
-        );
-
+            return false;
+        });
     }
 
 
@@ -244,7 +320,7 @@ public class MainFrame extends JFrame {
     public SimulationCanvas getCanvas() { return this.canvas; }
     public Console getConsole() { return this.console.getConsole(); }
     public Lifeform getSelectedLifeform() { return this.brushList.getSelectedValue(); }
-    public void setSelectedLifeform(Lifeform l) { this.brushList.setSelectedValue(l, true); }
+    public void setSelectedLifeform(Lifeform l) { this.brushList.setSelectedValue(Lifeform.getById(l.getId()), true); }
 
     public static MainFrame getInstance() {
         if (mainFrame == null) mainFrame = new MainFrame();

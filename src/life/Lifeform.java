@@ -2,7 +2,11 @@ package life;
 
 import display.MainFrame;
 import java.awt.*;
-import java.util.ArrayList;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 
 abstract public class Lifeform {
@@ -19,7 +23,7 @@ abstract public class Lifeform {
 
     protected int id;
     protected static int idTracker = 0;
-    protected static ArrayList<Lifeform> all = new ArrayList<>();
+    protected static LinkedHashMap<Integer, Lifeform> all = new LinkedHashMap<>();
 
     protected String name;
     protected String ruleString;
@@ -34,9 +38,13 @@ abstract public class Lifeform {
     public Lifeform(String name, String rulestring, Color color) {
         this.name = name;
         this.initRules(rulestring);
+        this.id = generateId(this.ruleString);
+        if (color == null) color = colorFromId();
         initColors(color);
-        this.id = idTracker++;
-        all.add(this);
+
+        if (all.containsKey(this.id)) {
+            all.get(this.id).setName(this.name);
+        } else all.put(this.id, this);
         MainFrame.getInstance().updateLifeformList();
     }
 
@@ -63,7 +71,6 @@ abstract public class Lifeform {
     }
 
     public static Lifeform getById(int id) {
-        if (id < 0 || id >= all.size()) return null;
         return all.get(id);
     }
 
@@ -79,14 +86,24 @@ abstract public class Lifeform {
     public String getName() { return this.name; }
     public int getRange() { return this.range; }
     public String getRuleString() { return this.ruleString; }
-    public static Lifeform[] getAll() { return all.toArray(new Lifeform[0]); }
+    public static Lifeform[] getAll() { return all.values().toArray(new Lifeform[0]); }
     public int getStates() { return this.states; }
 
     public Color getColor(int state) { return this.stateColors[state]; }
+    public void setName(String name) { this.name = name; }
 
     @Override
     public String toString() {
-        return "#" + this.id + ' ' + this.name + ": " + this.ruleString;
+        return "<html><font color = '"+ baseColorRGB() +"'>██</font><font color = 'aqua'>" + ' ' + this.name + ":</font> <font color='silver'>" + this.ruleString + "</font></html>";
+    }
+
+    private String baseColorRGB() {
+        Color baseColor = this.stateColors[0];
+        return "rgb(" + baseColor.getRed() + ", " + baseColor.getGreen() + ", " + baseColor.getBlue() + ")";
+    }
+
+    public static Lifeform create(String name, String ruleString) {
+        return create(name, ruleString, null);
     }
 
     public static Lifeform create(String name, String ruleString, Color color) {
@@ -94,35 +111,72 @@ abstract public class Lifeform {
         String ruleStringNoCommas = ruleString.replace(",", "");
         Matcher m;
 
-        if ((m = LifeformLifelike.rulePattern.matcher(ruleStringNoCommas)).matches())
-            return new LifeformLifelike(name, ruleStringNoCommas, color);
-        if ((m = LifeformGenerations.rulePattern.matcher(ruleStringNoCommas)).matches()) {
+        Lifeform res;
+
+        if ((m = LifeformLifelike.rulePattern.matcher(ruleStringNoCommas)).matches()){
+            res = new LifeformLifelike(name, ruleStringNoCommas, color);
+        }
+
+        else if ((m = LifeformGenerations.rulePattern.matcher(ruleStringNoCommas)).matches()) {
             if (Integer.parseInt(m.group(3)) <= 2)
-                return new LifeformLifelike(name, ruleStringNoCommas.substring(0, ruleStringNoCommas.lastIndexOf('/')), color);
-                else return new LifeformGenerations(name, ruleStringNoCommas, color);
-        }
-        if ((m = LifeformLTL.rulePattern.matcher(ruleString)).matches()) {
-            return new LifeformLTL(name, ruleString, color);
+                res = new LifeformLifelike(name, ruleStringNoCommas.substring(0, ruleStringNoCommas.lastIndexOf('/')), color);
+            else
+                res = new LifeformGenerations(name, ruleStringNoCommas, color);
         }
 
+        else if ((m = LifeformLTL.rulePattern.matcher(ruleString)).matches()) {
+            res = new LifeformLTL(name, ruleString, color);
+        }
 
-        return null;
+        else return null;
+        return  (res.ruleString.isEmpty())?null:res;
     }
 
-    public static Lifeform GOL = Lifeform.create("Conway's Life", "B3/S23", new Color(0, 124, 0));
-    public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23", new Color(116, 116, 116));
-    public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678", new Color(218, 137, 86));
-    public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12", new Color(210, 194, 59));
+    private static int generateId(String ruleString) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(ruleString.getBytes());
+            return Math.abs(new BigInteger(hash).intValue());
+        } catch (NoSuchAlgorithmException ignored) {}
+        return -1;
+    }
 
-    public static Lifeform CLRT = Lifeform.create("Color test", "B278/S3456/5", new Color(73, 1, 1));
+    private Color colorFromId() {
+        int red = (this.id >> 24) & 0xFF;
+        int green = (this.id >> 16) & 0xFF;
+        int blue = (this.id >> 8) & 0xFF;
 
-    public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678", new Color(96, 8, 83));
-    public static Lifeform STW6 = Lifeform.create("Like Starwars", "B278/S3456/6", new Color(57, 122, 230));
-    public static Lifeform FRWK = Lifeform.create("Fireworks", "B13/S2/C21", new Color(163, 29, 244));
+        if (red == 0 && green == 0 && blue == 0) red = green = blue = 1;
 
+        double lum = 0.299 * red + 0.587 * green + 0.114*blue; // 0 - 255
+        double factor = -1;
 
-    public static Lifeform BUGS = Lifeform.create("Bosco's Rule", "R5,C2,S33-57,B34-45", new Color(237, 95, 34));
-    public static Lifeform MAJ = Lifeform.create("Majority", "R4,C2,S40-80,B41-81", new Color(211, 211, 211));
+        if (lum < 80) factor = 80/lum;
+        else if (lum > 230) factor = 230/lum;
 
-    public static Lifeform FLME = Lifeform.create("Flame", "R2, C5, S8-10, B5-7", new Color(255, 228, 78));
+        if (factor > 0) {
+            red = (int)(red*factor);
+            blue = (int)(blue*factor);
+            green = (int)(green*factor);
+
+            if (red > 255) red = 255;
+            if (blue > 255) blue = 255;
+            if (green > 255) green = 255;
+        }
+
+        return new Color(red, green, blue);
+    }
+
+    public static Lifeform GOL = Lifeform.create("Conway's Life", "B3/S23");
+    public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23");
+    public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678");
+    public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12");
+    public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678");
+
+    public static Lifeform STW6 = Lifeform.create("Like Starwars", "B278/S3456/6");
+    public static Lifeform FRWK = Lifeform.create("Fireworks", "B13/S2/C21");
+    public static Lifeform FLME = Lifeform.create("Flame", "R2, C5, S8-10, B5-7");
+
+    public static Lifeform BUGS = Lifeform.create("Bosco's Rule", "R5,C2,S33-57,B34-45");
+    public static Lifeform MAJ = Lifeform.create("Majority", "R4,C2,S40-80,B41-81");
+
 }

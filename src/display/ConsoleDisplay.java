@@ -19,9 +19,12 @@ public class ConsoleDisplay extends JPanel {
 
     public ConsoleDisplay() {
         super();
-        this.setLayout(new BorderLayout());
+        this.setLayout(new BorderLayout(0, 5));
+        this.setBackground(MainFrame.backgroundColor);
+        this.setBorder(null);
 
         this.text = new JTextArea();
+        this.text.setFocusable(false);
         this.text.setBackground(consoleBackgroundColor);
         this.text.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 20));
         this.text.setForeground(consoleTextColor);
@@ -31,6 +34,7 @@ public class ConsoleDisplay extends JPanel {
 
         JScrollPane scroll = new JScrollPane(this.text);
         this.textScroll = scroll.getVerticalScrollBar();
+        scroll.setBorder(null);
         this.add(scroll, BorderLayout.CENTER);
 
         this.input = new JTextArea();
@@ -58,9 +62,10 @@ public class ConsoleDisplay extends JPanel {
         });
 
         scroll = new JScrollPane(this.input);
+        scroll.setBorder(null);
         this.add(scroll, BorderLayout.SOUTH);
 
-        this.setBackground(consoleInputBackgroundColor);
+        //this.setBackground(consoleInputBackgroundColor);
     }
 
     public void clear() { this.text.setText(""); }

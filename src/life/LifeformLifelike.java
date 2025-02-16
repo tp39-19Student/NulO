@@ -37,7 +37,7 @@ public class LifeformLifelike extends Lifeform {
 
             this.ruleString = "B" + m.group(1) + "/S" + m.group(2);
         } else {
-            this.ruleString = "INVALID";
+            this.ruleString = "";
         }
     }
 }

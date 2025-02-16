@@ -32,7 +32,7 @@ public class LifeformLTL extends Lifeform{
             this.ruleString = ruleString;
             regenerateRulestring();
         } else {
-            this.ruleString = "INVALID";
+            this.ruleString = "";
         }
     }
 

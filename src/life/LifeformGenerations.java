@@ -39,7 +39,7 @@ public class LifeformGenerations extends Lifeform {
 
             this.ruleString = "B" + m.group(1) + "/S" + m.group(2) + "/" + (this.states + 1);
         } else {
-            this.ruleString = "INVALID";
+            this.ruleString = "";
         }
     }
 }

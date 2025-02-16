@@ -9,7 +9,7 @@ import javax.swing.Timer;
 
 public class Simulation
 {
-    public static final int DEFAULT_SPEED = 45; //FPS
+    public static final int DEFAULT_SPEED = 50; //FPS
 
     private final int width;
     private final int height;
@@ -104,7 +104,7 @@ public class Simulation
         else updateSpeedLabel();
     }
 
-    private static final int[] speeds = new int[] {10, 45, 120};
+    private static final int[] speeds = new int[] {10, 50, 125};
     public void toggleFps() {
         for (int speed : speeds)
             if (fps < speed) {
