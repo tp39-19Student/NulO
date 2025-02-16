@@ -77,6 +77,7 @@ public class SimulationCanvas extends JPanel {
 
                 startX = e.getX();
                 startY = e.getY();
+
                 sim.setCell(startX /pixelSize, startY /pixelSize, life);
 
                 c.repaint();
@@ -99,6 +100,7 @@ public class SimulationCanvas extends JPanel {
                 int endY = e.getY();
                 int dx = (endX - startX);
                 int dy = (endY - startY);
+
 
                 if (Math.abs(dx) > Math.abs(dy)) {
                     int iStep = (startX<endX)?1:-1;

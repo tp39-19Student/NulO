@@ -4,9 +4,8 @@ import display.MainFrame;
 import display.SimulationCanvas;
 import life.Lifeform;
 
-import java.awt.*;
 import java.util.*;
-import java.util.Timer;
+import javax.swing.Timer;
 
 public class Simulation
 {
@@ -17,7 +16,7 @@ public class Simulation
     private boolean running;
     private int fps;
 
-    private Timer timer;
+    private final Timer timer;
     private final Cell[][] data;
 
     private final SimulationCanvas canvas;
@@ -41,6 +40,12 @@ public class Simulation
         MainFrame.getInstance().updatePlayPause(this.running);
         this.fps = DEFAULT_SPEED;
         updateSpeedLabel();
+
+        Simulation s = this;
+        timer = new Timer(1000 / this.fps, e -> {
+           s.nextFrame();
+        });
+        timer.setDelay(1000 / this.fps);
     }
 
     public void setCell(int x, int y, Lifeform life) {
@@ -62,21 +67,14 @@ public class Simulation
 
     public void play() {
         if (this.running) return;
-        Simulation s = this;
         this.running = true;
-        this.timer = new Timer(true);
-        this.timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                s.nextFrame();
-            }
-        }, 0, 1000 / fps);
+        this.timer.start();
         MainFrame.getInstance().updatePlayPause(this.running);
     }
     public void pause() {
         if (!this.running) return;
         this.running = false;
-        if (timer != null) timer.cancel();
+        this.timer.stop();
         MainFrame.getInstance().updatePlayPause(this.running);
     }
     public void togglePlayPause() {
@@ -85,16 +83,16 @@ public class Simulation
     }
     public void kill() {
         this.running = false;
-        if (timer != null) timer.cancel();
+        this.timer.stop();
     }
 
     public void setFps(int fps) {
         this.fps = fps;
         updateSpeedLabel();
-        if (this.running) {
-            pause();
-            play();
-        }
+        boolean restart = false;
+        if (this.running) { pause(); restart = true; }
+        timer.setDelay(1000 / this.fps);
+        if (restart) play();
     }
     public void setFps(String fps) {
         int f = -1;

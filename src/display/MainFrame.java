@@ -185,9 +185,19 @@ public class MainFrame extends JFrame {
         button.setBackground(quitColor);
         button.addActionListener(e -> window.dispose());
         button.setFocusPainted(false);
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                MainFrame.getInstance().getSimulation().kill();
+                super.windowClosed(e);
+            }
+        });
+
         this.add(button, c);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.getContentPane().setBackground(backgroundColor);
+
 
 
         this.setVisible(true);

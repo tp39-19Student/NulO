@@ -43,8 +43,22 @@ abstract public class Lifeform {
     private void initColors(Color baseColor) {
         this.stateColors = new Color[this.states];
         this.stateColors[0] = baseColor;
-        for (int i = 1; i < stateColors.length; i++) {
-            stateColors[i] = stateColors[i-1].darker();
+        if (this.states == 1) return;
+
+        int red = baseColor.getRed();
+        int green = baseColor.getGreen();
+        int blue = baseColor.getBlue();
+
+        int total = red + green + blue;
+
+        int min = total / this.states;
+        int step = (total - min) / (this.states - 1);
+
+        double factor;
+        for (int i = 1; i < this.states; i++) {
+            factor = (total - i*step) * 1.0 / total;
+            Color newColor =  new Color((int)(red*factor), (int)(green*factor), (int)(blue*factor));
+            stateColors[i] = newColor;
         }
     }
 
@@ -68,7 +82,6 @@ abstract public class Lifeform {
     public static Lifeform[] getAll() { return all.toArray(new Lifeform[0]); }
     public int getStates() { return this.states; }
 
-    public Color getColor() { return this.getColor(0); }
     public Color getColor(int state) { return this.stateColors[state]; }
 
     @Override
@@ -100,6 +113,9 @@ abstract public class Lifeform {
     public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23", new Color(116, 116, 116));
     public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678", new Color(218, 137, 86));
     public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12", new Color(210, 194, 59));
+
+    public static Lifeform CLRT = Lifeform.create("Color test", "B278/S3456/5", new Color(73, 1, 1));
+
     public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678", new Color(96, 8, 83));
     public static Lifeform STW6 = Lifeform.create("Like Starwars", "B278/S3456/6", new Color(57, 122, 230));
     public static Lifeform FRWK = Lifeform.create("Fireworks", "B13/S2/C21", new Color(163, 29, 244));
