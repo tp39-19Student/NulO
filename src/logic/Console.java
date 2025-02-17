@@ -80,7 +80,7 @@ public class Console {
                     display.println("Usage: setsize <Number>\nSet the size of a single cell to NxN pixels, will restart the simulation.");
                     return;
                 }
-                String s = args.split(" ")[0];;
+                String s = args.split(" ")[0];
                 try {
                     int size = Integer.parseInt(s);
                     if (MainFrame.getInstance().getCanvas().getPixelSize() == size) { display.println("Size is already " + size); return; }

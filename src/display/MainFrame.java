@@ -314,14 +314,20 @@ public class MainFrame extends JFrame {
 
     private void importPatternDialog() {
         JDialog dialog = new JDialog(this, "Import Pattern", true);
+        dialog.setLayout(new BorderLayout(0, 20));
+        dialog.getContentPane().setBackground(backgroundColor);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setSize(width/2, height/2);
         dialog.setLocationRelativeTo(null);
-
+        dialog.setUndecorated(true);
+        dialog.getRootPane().setBorder(BorderFactory.createLineBorder(backgroundColor, 20));
         JTextArea patternText = new JTextArea();
+        patternText.setBackground(lifeformListColor);
+        patternText.setForeground(Color.WHITE);
         patternText.setFont(mainFont.deriveFont(20F));
         patternText.setLineWrap(false);
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        buttonPanel.setBackground(backgroundColor);
 
         JButton button;
 
@@ -329,7 +335,8 @@ public class MainFrame extends JFrame {
         button.setBackground(newColor);
         button.setFont(mainFont);
         button.addActionListener(a -> {
-            Pattern.parse(patternText.getText());
+            Pattern p = Pattern.parse(patternText.getText());
+            if (p != null) this.canvas.setLoadedPattern(p);
             dialog.dispose();
         });
         buttonPanel.add(button);

@@ -18,6 +18,7 @@ public class Cell
     private int nextState;
 
     private Lifeform nextLife;
+    private Color nextPaint;
 
     private boolean dirty;
 
@@ -37,6 +38,7 @@ public class Cell
         this.nextState = 0;
         this.life = life;
         this.dirty = false;
+        this.nextPaint = Color.BLACK;
 
         this.neighbourRings = new Cell[Lifeform.MAX_RANGE][];
 
@@ -54,20 +56,20 @@ public class Cell
     }
 
     public void initNeighbourRings(Cell[][] data) {
-        int width = data.length;
-        int height = data[0].length;
+        int width = data[0].length;
+        int height = data.length;
 
         int[] ringIndexes = new int[Lifeform.MAX_RANGE];
 
-        int dx = -Lifeform.MAX_RANGE;
-        for (int i = mod((this.x - Lifeform.MAX_RANGE), width); i != mod((this.x + Lifeform.MAX_RANGE + 1), width); i = mod((i+1), width)) {
-            int dy = -Lifeform.MAX_RANGE;
-            for (int j = mod((this.y - Lifeform.MAX_RANGE), height); j != mod((this.y + Lifeform.MAX_RANGE + 1), height); j = mod((j + 1), height)) {
+        int dy = -Lifeform.MAX_RANGE;
+        for (int i = mod((this.y - Lifeform.MAX_RANGE), height); i != mod((this.y + Lifeform.MAX_RANGE + 1), height); i = mod((i+1), height)) {
+            int dx = -Lifeform.MAX_RANGE;
+            for (int j = mod((this.x - Lifeform.MAX_RANGE), width); j != mod((this.x + Lifeform.MAX_RANGE + 1), width); j = mod((j + 1), width)) {
                 int range = Math.max(Math.abs(dx), Math.abs(dy));
                 if (range != 0) this.neighbourRings[(range - 1)][ringIndexes[(range) - 1]++] = data[i][j];
-                dy++;
+                dx++;
             }
-            dx++;
+            dy++;
         }
     }
 
@@ -194,6 +196,7 @@ public class Cell
 
             notifyNeighbours(this.change);
             this.change = 0;
+            this.nextPaint = getColor();
         }
     }
 
@@ -211,6 +214,7 @@ public class Cell
             this.change = (this.state == 1)?-1:0;
         } else this.change = ((this.state != 1)?1:0);
         setCell();
+        this.nextPaint = getColor();
     }
 
     private List<Map.Entry<Lifeform, Integer>> findMates() {
@@ -249,5 +253,11 @@ public class Cell
     public Color getColor() {
         if (this.state == 0) return Color.BLACK;
         return this.life.getColor(this.state - 1);
+    }
+
+    public Color getNextPaint() {
+        Color res = this.nextPaint;
+        this.nextPaint = null;
+        return res;
     }
 }

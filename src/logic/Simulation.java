@@ -5,6 +5,7 @@ import display.SimulationCanvas;
 import life.Lifeform;
 
 import javax.swing.Timer;
+import java.awt.*;
 
 public class Simulation
 {
@@ -27,12 +28,12 @@ public class Simulation
         this.canvas = canvas;
         this.console = console;
 
-        this.data = new Cell[width][height];
-        for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
-                data[i][j] = new Cell(i, j);
-        for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
+        this.data = new Cell[height][width];
+        for (int i = 0; i < height; i++)
+            for (int j = 0; j < width; j++)
+                data[i][j] = new Cell(j, i);
+        for (int i = 0; i < height; i++)
+            for (int j = 0; j < width; j++)
                 data[i][j].initNeighbourRings(data);
 
         this.running = false;
@@ -48,17 +49,17 @@ public class Simulation
     }
 
     public void setCell(int x, int y, Lifeform life, boolean force) {
-        if (x < 0 || y < 0 || x >= data.length || y >= data[0].length) return;
-        data[x][y].setCell(life, force);
+        if (x < 0 || y < 0 || x >= data[0].length || y >= data.length) return;
+        data[y][x].setCell(life, force);
     }
 
     public void nextFrame() {
-        for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
+        for (int i = 0; i < height; i++)
+            for (int j = 0; j < width; j++)
                 data[i][j].updateCalculate();
 
-        for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
+        for (int i = 0; i < height; i++)
+            for (int j = 0; j < width; j++)
                 data[i][j].updateCommit();
 
         canvas.repaint();
@@ -103,7 +104,7 @@ public class Simulation
         else updateSpeedLabel();
     }
 
-    private static final int[] speeds = new int[] {10, 50, 125};
+    private static final int[] speeds = new int[] {10, 50, 250};
     public void toggleFps() {
         for (int speed : speeds)
             if (fps < speed) {
@@ -137,4 +138,8 @@ public class Simulation
     public int getHeight() { return height; }
     public int getWidth() { return width; }
     public Cell[][] getData() { return data; }
+    public Color getColor(int x, int y) {
+        if (x >= width || x < 0 || y >= height || y < 0) return Color.BLACK;
+        return data[y][x].getColor();
+    }
 }

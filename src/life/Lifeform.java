@@ -21,7 +21,6 @@ abstract public class Lifeform {
 
 
     protected int id;
-    protected static int idTracker = 0;
     protected static LinkedHashMap<Integer, Lifeform> all = new LinkedHashMap<>();
 
     protected String name;
@@ -88,6 +87,7 @@ abstract public class Lifeform {
     public static Lifeform[] getAll() { return all.values().toArray(new Lifeform[0]); }
     public int getStates() { return this.states; }
 
+    public Color getColor() { return this.getColor(0); }
     public Color getColor(int state) { return this.stateColors[state]; }
     public void setName(String name) { this.name = name; }
 
