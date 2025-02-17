@@ -4,7 +4,6 @@ import display.MainFrame;
 import display.SimulationCanvas;
 import life.Lifeform;
 
-import java.util.*;
 import javax.swing.Timer;
 
 public class Simulation
@@ -48,9 +47,9 @@ public class Simulation
         timer.setDelay(1000 / this.fps);
     }
 
-    public void setCell(int x, int y, Lifeform life) {
+    public void setCell(int x, int y, Lifeform life, boolean force) {
         if (x < 0 || y < 0 || x >= data.length || y >= data[0].length) return;
-        data[x][y].setCell(life);
+        data[x][y].setCell(life, force);
     }
 
     public void nextFrame() {

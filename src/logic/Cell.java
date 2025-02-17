@@ -196,14 +196,20 @@ public class Cell
             this.change = 0;
         }
     }
+
     public void setCell(Lifeform life) {
-        if (life != null && this.life != null) return;
-        if (life == this.life) return;
+        setCell(life, false);
+    }
+    public void setCell(Lifeform life, boolean force) {
+        if (!force) {
+            if (life != null && this.life != null) return;
+            if (life == this.life) return;
+        }
         this.nextLife = life;
         if (life == null) {
             this.nextState = 0;
             this.change = (this.state == 1)?-1:0;
-        } else this.change = 1;
+        } else this.change = ((this.state != 1)?1:0);
         setCell();
     }
 

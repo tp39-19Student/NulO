@@ -63,6 +63,7 @@ public class SimulationCanvas extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 super.mousePressed(e);
+                boolean shift = (e.getModifiers() & Event.SHIFT_MASK) != 0;
                 c.requestFocusInWindow();
                 buttonPressed = e.getButton();
                 if (buttonPressed == MouseEvent.BUTTON2) {
@@ -78,7 +79,7 @@ public class SimulationCanvas extends JPanel {
                 startX = e.getX();
                 startY = e.getY();
 
-                sim.setCell(startX /pixelSize, startY /pixelSize, life);
+                sim.setCell(startX /pixelSize, startY /pixelSize, life, shift);
 
                 c.repaint();
             }
@@ -93,6 +94,7 @@ public class SimulationCanvas extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 super.mouseDragged(e);
+                boolean shift = (e.getModifiers() & Event.SHIFT_MASK) != 0;
                 if (buttonPressed != MouseEvent.BUTTON1 && buttonPressed != MouseEvent.BUTTON3) return;
                 Lifeform life = (buttonPressed == MouseEvent.BUTTON3)?null:brush;
 
@@ -108,7 +110,7 @@ public class SimulationCanvas extends JPanel {
                     double y = startY;
 
                     for (int x = startX; x != endX; x += iStep) {
-                        sim.setCell(x/pixelSize, (int) Math.floor(y/pixelSize), life);
+                        sim.setCell(x/pixelSize, (int) Math.floor(y/pixelSize), life, shift);
                         y += dStep;
                     }
                 } else {
@@ -117,7 +119,7 @@ public class SimulationCanvas extends JPanel {
                     double x = startX;
 
                     for (int y = startY; y != endY; y += iStep) {
-                        sim.setCell((int) Math.floor(x/pixelSize), y/pixelSize, life);
+                        sim.setCell((int) Math.floor(x/pixelSize), y/pixelSize, life, shift);
                         x += dStep;
                     }
                 }

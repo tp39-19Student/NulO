@@ -1,6 +1,7 @@
 package display;
 
 import life.Lifeform;
+import life.Pattern;
 import logic.Console;
 import logic.Simulation;
 
@@ -11,18 +12,19 @@ import java.awt.event.*;
 public class MainFrame extends JFrame {
     public static final Color backgroundColor = new Color(55, 55, 111);
 
-    private static final Color inactiveColor = new Color(72, 72, 72);
-    private static final Color quitColor = new Color(177, 55, 55);
-
-    private static final Color playColor = new Color(49, 128, 32);
-    private static final Color pauseColor = quitColor;
-    private static final Color speedChangeColor = new Color(104, 104, 143);
-
     private static final Color patternToolColor = new Color(115, 103, 208);
     private static final Color newColor = new Color(149, 221, 147);
 
     private static final Color lifeformListColor = new Color(39, 39, 71);
     private static final Color lifeformListSelectColor = backgroundColor.brighter();
+
+    private static final Color inactiveColor = new Color(72, 72, 72);
+    private static final Color quitColor = new Color(177, 55, 55);
+
+    private static final Color playColor = new Color(49, 128, 32);
+    private static final Color pauseColor = quitColor;
+    private static final Color speedChangeColor = lifeformListSelectColor;
+
 
     private static final Font mainFont = new Font(Font.MONOSPACED, Font.PLAIN, 30);
 
@@ -86,18 +88,29 @@ public class MainFrame extends JFrame {
         );
 
         // ======= Pattern Buttons =======
+        Font patternFont = mainFont.deriveFont(20F);
         JPanel buttonSet = new JPanel(new GridLayout(1, 2));
         button = new JButton("INSERT PATTERN");
-        button.setFont(mainFont);
+        button.setFont(patternFont);
         button.setBackground(patternToolColor);
         button.setFocusPainted(false);
         buttonSet.add(button);
         button = new JButton("NEW PATTERN");
-        button.setFont(mainFont);
+        button.setFont(patternFont);
         button.setBackground(newColor);
         button.setFocusPainted(false);
         buttonSet.add(button);
         this.add(buttonSet, c);
+        button = new JButton("IMPORT PATTERN");
+        button.setFont(patternFont);
+        button.setBackground(inactiveColor);
+        button.setForeground(Color.LIGHT_GRAY);
+        button.setFocusPainted(false);
+        button.addActionListener(a -> {
+            importPatternDialog();
+        });
+        buttonSet.add(button);
+
 
         // ======= Lifeform Brush =======
         JPanel brushPanel = new JPanel(new BorderLayout(0, margin));
@@ -215,7 +228,7 @@ public class MainFrame extends JFrame {
         speedControl.setBackground(backgroundColor);
         button = new JButton("▲");
         button.setFont(mainFont);
-        button.setBackground(lifeformListSelectColor);
+        button.setBackground(speedChangeColor);
         button.setForeground(Color.LIGHT_GRAY);
         button.setFocusPainted(false);
         button.addActionListener(a -> MainFrame.getInstance().getSimulation().fpsUp());
@@ -244,7 +257,7 @@ public class MainFrame extends JFrame {
         speedControl.add(speedValuePanel);
         button = new JButton("▼");
         button.setFont(mainFont);
-        button.setBackground(lifeformListSelectColor);
+        button.setBackground(speedChangeColor);
         button.setForeground(Color.LIGHT_GRAY);
         button.setFocusPainted(false);
         button.addActionListener(a -> MainFrame.getInstance().getSimulation().fpsDown());
@@ -297,6 +310,40 @@ public class MainFrame extends JFrame {
             }
             return false;
         });
+    }
+
+    private void importPatternDialog() {
+        JDialog dialog = new JDialog(this, "Import Pattern", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setSize(width/2, height/2);
+        dialog.setLocationRelativeTo(null);
+
+        JTextArea patternText = new JTextArea();
+        patternText.setFont(mainFont.deriveFont(20F));
+        patternText.setLineWrap(false);
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+
+        JButton button;
+
+        button = new JButton("Import");
+        button.setBackground(newColor);
+        button.setFont(mainFont);
+        button.addActionListener(a -> {
+            Pattern.parse(patternText.getText());
+            dialog.dispose();
+        });
+        buttonPanel.add(button);
+
+        button = new JButton("Cancel");
+        button.setBackground(quitColor);
+        button.setFont(mainFont);
+        button.setForeground(Color.LIGHT_GRAY);
+        button.addActionListener(a -> dialog.dispose());
+        buttonPanel.add(button);
+
+        dialog.add(new JScrollPane(patternText), BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
 
 

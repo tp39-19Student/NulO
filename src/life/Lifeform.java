@@ -5,7 +5,6 @@ import java.awt.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 
@@ -43,7 +42,7 @@ abstract public class Lifeform {
         initColors(color);
 
         if (all.containsKey(this.id)) {
-            all.get(this.id).setName(this.name);
+            if (!this.name.isEmpty()) all.get(this.id).setName(this.name);
         } else all.put(this.id, this);
         MainFrame.getInstance().updateLifeformList();
     }
@@ -94,7 +93,7 @@ abstract public class Lifeform {
 
     @Override
     public String toString() {
-        return "<html><font color = '"+ baseColorRGB() +"'>██</font><font color = 'aqua'>" + ' ' + this.name + ":</font> <font color='silver'>" + this.ruleString + "</font></html>";
+        return "<html><font color = '"+ baseColorRGB() +"'>██</font><font color = 'aqua'>" + ' ' + ((!this.name.isEmpty())?this.name:("Imported (#" + this.id + ")")) + ":</font> <font color='silver'>" + this.ruleString + "</font></html>";
     }
 
     private String baseColorRGB() {
