@@ -101,14 +101,14 @@ public class Pattern {
                     g.setColor(alive);
                 }
                 g.setColor((cells[i][j] == 1)?alive:dead);
-                g.fillRect(x + j*pixelsize, y + i*pixelsize, pixelsize, pixelsize);
+                g.fillRect((x + j)*pixelsize, (y + i)*pixelsize, pixelsize, pixelsize);
         }
 
-        if ((x/pixelsize + this.width) > simWidth || (y/pixelsize + this.height) > simHeight || x < 0 || y < 0)
+        if ((x + this.width) > simWidth || (y + this.height) > simHeight || x < 0 || y < 0)
             g.setColor(Color.RED);
         else
             g.setColor(Color.LIGHT_GRAY);
-        g.drawRect(x, y, this.width * pixelsize - 1, this.height*pixelsize - 1);
+        g.drawRect(x*pixelsize, y*pixelsize, this.width * pixelsize - 1, this.height*pixelsize - 1);
     }
 
     public void place(int x, int y) {

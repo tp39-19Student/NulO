@@ -267,8 +267,12 @@ public class MainFrame extends JFrame {
         this.add(simControl, c);
         c.weighty = 0.125;
 
-        // ======= Quit Button =======
+        // ======= New, Quit Button =======
         c.insets = new Insets(5*margin, 0, margin, margin);
+
+        buttonSet = new JPanel(new BorderLayout(margin*3, 0));
+        buttonSet.setBackground(backgroundColor);
+
         button = new JButton("QUIT");
         button.setFont(mainFont);
         button.setForeground(Color.WHITE);
@@ -283,12 +287,27 @@ public class MainFrame extends JFrame {
                 super.windowClosed(e);
             }
         });
+        buttonSet.add(button, BorderLayout.CENTER);
 
-        this.add(button, c);
+        button = new JButton(" NEW ");
+        button.setFont(mainFont);
+        button.setBackground(newColor.darker());
+        button.addActionListener(a -> canvas.newSimulation());
+        button.setFocusPainted(false);
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                MainFrame.getInstance().getSimulation().kill();
+                super.windowClosed(e);
+            }
+        });
+        buttonSet.add(button, BorderLayout.WEST);
+
+        this.add(buttonSet, c);
+
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.getContentPane().setBackground(backgroundColor);
-
-
 
         this.setVisible(true);
         GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0].setFullScreenWindow(this);

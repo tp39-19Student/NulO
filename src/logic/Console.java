@@ -115,8 +115,8 @@ public class Console {
                     if (speed <= 0) { display.println("Speed must be greater than 0"); return; }
                     if (speed > 1000) { display.println("Speed cannot be greater than 1000"); return; }
 
-                    sim.setFps(speed);
-                    display.println("Speed set to " + speed + " generations per second");
+                    int res = sim.setFps(speed);
+                    display.println("Speed set to " + res + " generations per second");
                 } catch (NumberFormatException e) {display.println(s + " is not an integer.");}} break;
             case "next": case "f": case "frame": {
                 sim.pause(); sim.nextFrame();} break;

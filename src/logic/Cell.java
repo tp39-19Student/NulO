@@ -18,8 +18,13 @@ public class Cell
     private int nextState;
 
     private Lifeform nextLife;
-    private Color nextPaint;
 
+    private final int drawSize;
+    private final int drawX;
+    private final int drawY;
+
+
+    private Color nextColor;
     private boolean dirty;
 
     private final Cell[][] neighbourRings;
@@ -27,18 +32,23 @@ public class Cell
     private int change;
     private final int[] livingNeighbourCounts;
 
-    public Cell(int x, int y) {
-        this(x, y, null);
+    public Cell(int x, int y, int pixelsize) {
+        this(x, y, pixelsize, null);
     }
 
-    public Cell(int x, int y, Lifeform life) {
+    public Cell(int x, int y, int pixelsize, Lifeform life) {
         this.x = x;
         this.y = y;
+
+        this.drawSize = pixelsize;
+        this.drawX = this.x * this.drawSize;
+        this.drawY = this.y * this.drawSize;
+
         this.state = 0;
         this.nextState = 0;
         this.life = life;
         this.dirty = false;
-        this.nextPaint = Color.BLACK;
+        this.nextColor = Color.BLACK;
 
         this.neighbourRings = new Cell[Lifeform.MAX_RANGE][];
 
@@ -196,7 +206,7 @@ public class Cell
 
             notifyNeighbours(this.change);
             this.change = 0;
-            this.nextPaint = getColor();
+            this.nextColor = getColor();
         }
     }
 
@@ -214,7 +224,6 @@ public class Cell
             this.change = (this.state == 1)?-1:0;
         } else this.change = ((this.state != 1)?1:0);
         setCell();
-        this.nextPaint = getColor();
     }
 
     private List<Map.Entry<Lifeform, Integer>> findMates() {
@@ -232,7 +241,7 @@ public class Cell
         List<Map.Entry<Lifeform, Integer>> res = new ArrayList<>(map.entrySet());
         res.sort((e1, e2) -> {
             int comp = e2.getValue() - e1.getValue();
-            if (comp == 0) comp = e2.getKey().getId() - e1.getKey().getId(); //#TODO
+            if (comp == 0) comp = e2.getKey().getId() - e1.getKey().getId();
             return comp;
         });
 
@@ -255,9 +264,15 @@ public class Cell
         return this.life.getColor(this.state - 1);
     }
 
-    public Color getNextPaint() {
-        Color res = this.nextPaint;
-        this.nextPaint = null;
-        return res;
+    public void paint(Graphics g) {
+        if (this.nextColor != null) {
+            g.setColor(this.nextColor);
+            this.nextColor = null;
+            g.fillRect(drawX, drawY, drawSize, drawSize);
+        }
+    }
+
+    public void repaintNextFrame() {
+        this.nextColor = this.getColor();
     }
 }

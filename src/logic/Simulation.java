@@ -28,10 +28,12 @@ public class Simulation
         this.canvas = canvas;
         this.console = console;
 
+        int pixelsize = canvas.getPixelSize();
+
         this.data = new Cell[height][width];
         for (int i = 0; i < height; i++)
             for (int j = 0; j < width; j++)
-                data[i][j] = new Cell(j, i);
+                data[i][j] = new Cell(j, i, pixelsize);
         for (int i = 0; i < height; i++)
             for (int j = 0; j < width; j++)
                 data[i][j].initNeighbourRings(data);
@@ -86,13 +88,14 @@ public class Simulation
         this.timer.stop();
     }
 
-    public void setFps(int fps) {
-        this.fps = fps;
+    public int setFps(int fps) {
+        this.fps = 1000 / (1000/fps);
         updateSpeedLabel();
         boolean restart = false;
         if (this.running) { pause(); restart = true; }
         timer.setDelay(1000 / this.fps);
         if (restart) play();
+        return this.fps;
     }
     public void setFps(String fps) {
         int f = -1;

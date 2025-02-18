@@ -158,34 +158,28 @@ public class SimulationCanvas extends JPanel {
         });
     }
 
-    private int previousMouseX = 0;
-    private int previousMouseY = 0;
+
     @Override
     protected void paintComponent(Graphics g) {
         //super.paintComponent(g);
 
+        if (sim == null) return;
+        Cell[][] data = sim.getData();
+
         // ====== Cells ======
-        if (sim != null) {
-            Cell[][] data = sim.getData();
-            for (int i = 0; i < simHeight; i++)
-                for (int j = 0; j < simWidth; j++) {
-                    Color c = data[i][j].getNextPaint();
-                    if (c == null) continue;
-                    g.setColor(c);
-                    g.fillRect(j*pixelSize, i*pixelSize, pixelSize, pixelSize);
-                }
-            g.setColor(sim.getColor(previousMouseX/pixelSize, previousMouseY/pixelSize));
-        } else g.setColor(Color.BLACK);
-        // Repaint previous cursor position
-        g.fillRect(previousMouseX, previousMouseY, pixelSize, pixelSize);
+        for (int i = 0; i < simHeight; i++)
+            for (int j = 0; j < simWidth; j++) {
+                data[i][j].paint(g);
+            }
 
         // ====== Mouse Position ======
         Point mousePosition = MouseInfo.getPointerInfo().getLocation();
-        int mouseX = ((mousePosition.x - this.getLocationOnScreen().x)/pixelSize)*pixelSize;
-        int mouseY = ((mousePosition.y - this.getLocationOnScreen().y)/pixelSize)*pixelSize;
-        if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+        int mouseX = ((mousePosition.x - this.getLocationOnScreen().x)/pixelSize);
+        int mouseY = ((mousePosition.y - this.getLocationOnScreen().y)/pixelSize);
+        if (mouseX > 0 && mouseX < simWidth && mouseY > 0 && mouseY < simHeight) {
             g.setColor(brush.getColor());
-            g.drawRect(mouseX, mouseY, pixelSize-1, pixelSize-1);
+            g.drawRect(mouseX*pixelSize, mouseY*pixelSize, pixelSize-1, pixelSize-1);
+            data[mouseY][mouseX].repaintNextFrame();
         }
 
         // ====== Extra Space ======
@@ -194,24 +188,16 @@ public class SimulationCanvas extends JPanel {
         if (extraY > 0) g.fillRect(0, simEndY, width, extraY);
 
         // ====== Pattern Preview ======
-        if (patternState > 0) {
-            this.repaintCells(g, previousMouseX/pixelSize, previousMouseY/pixelSize, this.loadedPattern.getWidth(), this.loadedPattern.getHeight());
-            if (patternState == 2) {
-                this.patternState = 0;
-            }
+        if (patternState == 2) {
+            patternState = 0;
         }
-        if (patternState == 1 && this.loadedPattern != null) this.loadedPattern.drawPreview(g, mouseX, mouseY);
-
-        previousMouseX = mouseX;
-        previousMouseY = mouseY;
-    }
-
-    private void repaintCells(Graphics g, int indexX, int indexY, int width, int height) {
-        for (int i = Math.max(indexY, 0); i < Math.min(indexY + height, this.simHeight); i++ )
-            for (int j = Math.max(indexX, 0); j < Math.min(indexX + width, this.simWidth); j++ ) {
-                g.setColor(sim.getColor(j, i));
-                g.fillRect(j*this.pixelSize, i*this.pixelSize, this.pixelSize, this.pixelSize);
-            }
+        if (patternState == 1 && this.loadedPattern != null) {
+            this.loadedPattern.drawPreview(g, mouseX, mouseY);
+            for (int i = Math.max(mouseY, 0); i < Math.min(mouseY + loadedPattern.getHeight(), this.simHeight); i++ )
+                for (int j = Math.max(mouseX, 0); j < Math.min(mouseX + loadedPattern.getWidth(), this.simWidth); j++ ) {
+                    data[i][j].repaintNextFrame();
+                }
+        }
     }
 
     public boolean setPixelSize(int size) {
