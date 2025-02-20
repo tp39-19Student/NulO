@@ -12,19 +12,13 @@ import java.awt.event.*;
 public class SimulationCanvas extends JPanel {
 
     private Simulation sim = null;
+    private int basePixelSize = 6;
     private int pixelSize = 6;
     private int width = -1;
     private int height = -1;
     private int simWidth = -1;
     private int simHeight = -1;
 
-    private int startX;
-    private int startY;
-
-    private Lifeform brush = null;
-    private boolean crazy = false;
-
-    private int buttonPressed = -1;
 
     //Border drawing
     private int extraX;
@@ -32,8 +26,24 @@ public class SimulationCanvas extends JPanel {
     private int simEndX;
     private int simEndY;
 
+    //Placing cells
+    private int mouseStartX;
+    private int mouseStartY;
+
+    private Lifeform brush = null;
+    private boolean crazy = false;
+    private int buttonPressed = -1;
+
+    //Pattern
     private Pattern loadedPattern;
     int patternState; // 0 - None, 1 - Loaded, 2 - Finished (Block Brush)
+
+    //Zoom / Pan (Cell Indexes)
+    int drawXStart;
+    int drawXEnd;
+    int drawYStart;
+    int drawYEnd;
+    int panStep = 600/pixelSize;
 
     public SimulationCanvas() {
         super();
@@ -47,13 +57,18 @@ public class SimulationCanvas extends JPanel {
                 super.componentResized(e);
                 width = c.getWidth();
                 height = c.getHeight();
-                simWidth = (width - (width%pixelSize))/pixelSize;
-                simHeight = (height - (height%pixelSize))/pixelSize;
+                simWidth = (width - (width%pixelSize))/basePixelSize;
+                simHeight = (height - (height%pixelSize))/basePixelSize;
 
-                simEndX = simWidth*pixelSize;
-                simEndY = simHeight*pixelSize;
+                simEndX = simWidth*basePixelSize;
+                simEndY = simHeight*basePixelSize;
                 extraX = width - simEndX;
                 extraY = height - simEndY;
+
+                drawXStart = 0;
+                drawXEnd = simWidth;
+                drawYStart = 0;
+                drawYEnd = simHeight;
 
                 c.newSimulation();
                 MainFrame.getInstance().setSelectedLifeform(Lifeform.GOL);
@@ -82,7 +97,7 @@ public class SimulationCanvas extends JPanel {
 
                 if (patternState == 1) {
                     if (buttonPressed == MouseEvent.BUTTON1) {
-                        loadedPattern.place(e.getX()/pixelSize, e.getY()/pixelSize);
+                        loadedPattern.place(e.getX()/pixelSize + drawXStart, e.getY()/pixelSize + drawYStart);
                         if (!shift) {
                             patternState = 2;
                         }
@@ -94,8 +109,9 @@ public class SimulationCanvas extends JPanel {
                     return;
                 }
                 if (buttonPressed == MouseEvent.BUTTON2) {
-                    int selectX = e.getX()/pixelSize;
-                    int selectY = e.getY()/pixelSize;
+                    //Middle Click
+                    int selectX = e.getX()/pixelSize + drawXStart;
+                    int selectY = e.getY()/pixelSize + drawYStart;
 
                     MainFrame.getInstance().getConsole().command("debug " + selectX + " " + selectY);
                     return;
@@ -103,10 +119,10 @@ public class SimulationCanvas extends JPanel {
                 if (buttonPressed != MouseEvent.BUTTON1 && buttonPressed != MouseEvent.BUTTON3) return;
                 Lifeform life = (buttonPressed == MouseEvent.BUTTON3)?null:brush;
 
-                startX = e.getX();
-                startY = e.getY();
+                mouseStartX = e.getX() + drawXStart*pixelSize;
+                mouseStartY = e.getY() + drawYStart*pixelSize;
 
-                sim.setCell(startX /pixelSize, startY /pixelSize, life, shift);
+                sim.setCell((mouseStartX) /pixelSize, (mouseStartY) /pixelSize, life, shift);
 
                 c.repaint();
             }
@@ -126,34 +142,49 @@ public class SimulationCanvas extends JPanel {
                 if (buttonPressed != MouseEvent.BUTTON1 && buttonPressed != MouseEvent.BUTTON3) return;
                 Lifeform life = (buttonPressed == MouseEvent.BUTTON3)?null:brush;
 
-                int endX = e.getX();
-                int endY = e.getY();
-                int dx = (endX - startX);
-                int dy = (endY - startY);
+                int endX = e.getX() + drawXStart*pixelSize;
+                int endY = e.getY() + drawYStart*pixelSize;
+                int dx = (endX - mouseStartX);
+                int dy = (endY - mouseStartY);
 
 
                 if (Math.abs(dx) > Math.abs(dy)) {
-                    int iStep = (startX<endX)?1:-1;
+                    int iStep = (mouseStartX <endX)?1:-1;
                     double dStep = ((dy * 1.0) / dx)*(crazy?1:iStep);
-                    double y = startY;
+                    double y = mouseStartY;
 
-                    for (int x = startX; x != endX; x += iStep) {
+                    for (int x = mouseStartX; x != endX; x += iStep) {
                         sim.setCell(x/pixelSize, (int) Math.floor(y/pixelSize), life, shift);
                         y += dStep;
                     }
                 } else {
-                    int iStep = (startY<endY)?1:-1;
+                    int iStep = (mouseStartY <endY)?1:-1;
                     double dStep = ((dx * 1.0) / dy)*(crazy?1:iStep);
-                    double x = startX;
+                    double x = mouseStartX;
 
-                    for (int y = startY; y != endY; y += iStep) {
+                    for (int y = mouseStartY; y != endY; y += iStep) {
                         sim.setCell((int) Math.floor(x/pixelSize), y/pixelSize, life, shift);
                         x += dStep;
                     }
                 }
-                startX = endX;
-                startY = endY;
+                mouseStartX = endX;
+                mouseStartY = endY;
                 c.repaint();
+            }
+        });
+
+        this.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                int amount = e.getWheelRotation();
+                int aroundX = e.getX()/pixelSize + drawXStart;
+                int aroundY = e.getY()/pixelSize + drawYStart;
+
+                if (amount < 0) {
+                    zoomInAround(aroundX, aroundY);
+                } else {
+                    zoomOutAround(aroundX, aroundY);
+                }
             }
         });
     }
@@ -167,18 +198,18 @@ public class SimulationCanvas extends JPanel {
         Cell[][] data = sim.getData();
 
         // ====== Cells ======
-        for (int i = 0; i < simHeight; i++)
-            for (int j = 0; j < simWidth; j++) {
+        for (int i = drawYStart; i < drawYEnd; i++)
+            for (int j = drawXStart; j < drawXEnd; j++) {
                 data[i][j].paint(g);
             }
 
         // ====== Mouse Position ======
         Point mousePosition = MouseInfo.getPointerInfo().getLocation();
-        int mouseX = ((mousePosition.x - this.getLocationOnScreen().x)/pixelSize);
-        int mouseY = ((mousePosition.y - this.getLocationOnScreen().y)/pixelSize);
-        if (mouseX > 0 && mouseX < simWidth && mouseY > 0 && mouseY < simHeight) {
+        int mouseX = ((mousePosition.x - this.getLocationOnScreen().x)/pixelSize) + drawXStart;
+        int mouseY = ((mousePosition.y - this.getLocationOnScreen().y)/pixelSize) + drawYStart;
+        if (mouseX >= drawXStart && mouseX < drawXEnd && mouseY >= drawYStart && mouseY < drawYEnd) {
             g.setColor(brush.getColor());
-            g.drawRect(mouseX*pixelSize, mouseY*pixelSize, pixelSize-1, pixelSize-1);
+            g.drawRect((mouseX - drawXStart)*pixelSize, (mouseY - drawYStart)*pixelSize, pixelSize-1, pixelSize-1);
             data[mouseY][mouseX].repaintNextFrame();
         }
 
@@ -200,18 +231,18 @@ public class SimulationCanvas extends JPanel {
         }
     }
 
-    public boolean setPixelSize(int size) {
+    public boolean setBasePixelsize(int size) {
         int simWidth = (width - (width%size))/size;
         int simHeight = (height - (height%size))/size;
 
         if (simWidth < 2*Lifeform.MAX_RANGE + 3) return false;
         if (simHeight < 2*Lifeform.MAX_RANGE + 3) return false;
 
-        this.pixelSize = size;
+        this.basePixelSize = size;
         this.simWidth = simWidth;
         this.simHeight = simHeight;
-        simEndX = simWidth*pixelSize;
-        simEndY = simHeight*pixelSize;
+        simEndX = simWidth*basePixelSize;
+        simEndY = simHeight*basePixelSize;
         extraX = width - simEndX;
         extraY = height - simEndY;
 
@@ -219,19 +250,93 @@ public class SimulationCanvas extends JPanel {
         return true;
     }
 
+    private void setDrawingBounds(int drawXStart, int drawXEnd, int drawYStart, int drawYEnd) {
+        //Pan if out of frame
+        if (drawXStart < 0) {
+            drawXEnd -= drawXStart;
+            drawXStart = 0;
+        } else if (drawXEnd > simWidth) {
+            drawXStart -= (drawXEnd - simWidth);
+            drawXEnd = simWidth;
+        }
+        if (drawYStart < 0) {
+            drawYEnd -= drawYStart;
+            drawYStart = 0;
+        } else if (drawYEnd > simHeight) {
+            drawYStart -= (drawYEnd - simHeight);
+            drawYEnd = simHeight;
+        }
+
+
+        if (drawXStart >= drawXEnd || drawYStart >= drawYEnd) {return;}
+        if ((width / (drawXEnd - drawXStart)) != (height / (drawYEnd - drawYStart))) {return;}
+        if ((drawXEnd - drawXStart) > simWidth || (drawYEnd - drawYStart) > simHeight) {return;}
+
+        this.drawXStart = drawXStart;
+        this.drawXEnd = drawXEnd;
+        this.drawYStart = drawYStart;
+        this.drawYEnd = drawYEnd;
+
+        updateCellDrawing();
+        this.repaint();
+    }
+
+    private void zoomInAround(int indexX, int indexY) {
+        int zoom = (pixelSize/basePixelSize) * 2;
+        setDrawingBounds(indexX - simWidth/(2*zoom), indexX + simWidth/(2*zoom), indexY - simHeight/(2*zoom), indexY + simHeight/(2*zoom));
+    }
+    private void zoomOutAround(int indexX, int indexY) {
+        if (pixelSize == basePixelSize) return;
+        int zoom = (pixelSize/basePixelSize) / 2;
+        if (zoom < 1)
+            setDrawingBounds(0, simWidth, 0, simHeight);
+        else
+            setDrawingBounds(indexX - simWidth/(2*zoom), indexX + simWidth/(2*zoom), indexY - simHeight/(2*zoom), indexY + simHeight/(2*zoom));
+    }
+
+    private void updateCellDrawing() {
+        Cell[][] data = sim.getData();
+        int drawSize = (int)(width / (drawXEnd - drawXStart));
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                if (i < drawYStart || i >= drawYEnd || j < drawXStart || j >= drawXEnd) {
+                    data[i][j].setShouldDraw(false);
+                } else {
+                    data[i][j].setDrawParams(drawSize, (j - drawXStart)*drawSize, (i - drawYStart)*drawSize);
+                    data[i][j].setShouldDraw(true);
+                }
+            }
+        }
+
+        this.pixelSize = drawSize;
+        this.panStep = 600/pixelSize;
+    }
 
 
     public void newSimulation() {
         if (sim != null) sim.kill();
         this.sim = new Simulation(simWidth, simHeight, this, MainFrame.getInstance().getConsole());
         MainFrame.getInstance().getConsole().setSimulation(this.sim);
-        this.repaint();
+        this.setDrawingBounds(0, simWidth, 0, simHeight);
     }
 
-    public int getPixelSize() { return pixelSize; }
+    public int getBasePixelSize() { return basePixelSize; }
+    public int getPixelSize() {return pixelSize;}
     public Simulation getSimulation() { return sim; }
     public void setLifeformBrush(Lifeform life) { this.brush = life; }
     public void setLoadedPattern(Pattern pattern) { this.patternState = 1; this.loadedPattern = pattern;  }
+
+    public int getDrawXStart() {return drawXStart;}
+    public int getDrawXEnd() {return drawXEnd;}
+    public int getDrawYStart() {return drawYStart;}
+    public int getDrawYEnd() {return drawYEnd;}
+    public int getPanStep() {return panStep;}
+
+    public void pan(int x, int y) {
+        setDrawingBounds(drawXStart + x, drawXEnd + x, drawYStart + y, drawYEnd + y);
+    }
+
 
     public boolean toggleCrazy() { crazy = !crazy; return crazy; }
 }

@@ -1,14 +1,19 @@
 package life;
 
 import display.MainFrame;
+import display.SimulationCanvas;
 import logic.Simulation;
 
 import java.awt.*;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 
 public class Pattern {
     private static final java.util.regex.Pattern RLE_Format = java.util.regex.Pattern.compile(
-            "((?:#.*\n)*)x ?= ?([0-9]+) ?, ?y ?= ?([0-9]+)(?: ?, ?rule ?= ?(.*))?\n([0-9bo$ \n]*)!"
+            "((?:#.*\\n)*)x ?= ?([0-9]+) ?, ?y ?= ?([0-9]+)(?: ?, ?rule ?= ?(.*))?\\n([0-9bo$ \\n]*)!"
+    );
+    private static final java.util.regex.Pattern PLAINTEXT_Format = java.util.regex.Pattern.compile(
+            "((?:!.*\\n)*)((?:.*\\n?)+)"
     );
 
     private final int lifeformId;
@@ -27,14 +32,13 @@ public class Pattern {
     public static Pattern parse(String str) {
         Matcher m;
         str = str.trim();
-        if ((m = RLE_Format.matcher(str)).matches()) {
-            return RLE(m);
-        }
+        if ((m = RLE_Format.matcher(str)).matches()) return decodeRLE(m);
+        else if ((m = PLAINTEXT_Format.matcher(str)).matches()) return decodePlaintext(m);
 
         return null;
     }
 
-    private static Pattern RLE(Matcher m) {
+    private static Pattern decodeRLE(Matcher m) {
         //for (int i = 0; i <= m.groupCount(); i++) System.out.println("Group" + i + ": " + m.group(i) + "\n");
 
         //#TODO: Comment Part
@@ -87,16 +91,46 @@ public class Pattern {
         return new Pattern(width, height, lifeformId, cells);
     }
 
+    private static Pattern decodePlaintext(Matcher m) {
+        //for (int i = 0; i <= m.groupCount(); i++) System.out.println("Group" + i + ": " + m.group(i) + "\n");
+        //#TODO: Comment Part
+
+        //Can this even specify other rules?
+        Lifeform lifeform = Lifeform.GOL;
+        MainFrame.getInstance().setSelectedLifeform(lifeform);
+
+        int lifeformId = lifeform.getId();
+
+        String[] data = m.group(2).split("\n");
+        int height = data.length;
+        int width = Arrays.stream(data).mapToInt(String::length).max().orElse(0);
+        if (height == 0 || width == 0) return null;
+        int[][] cells = new int[height][width];
+
+        for (int i = 0; i < height; i++) {
+            String line = data[i];
+            for (int j = 0; j < line.length(); j++) {
+                if (line.charAt(j) != '.') cells[i][j] = 1;
+            }
+        }
+
+        return new Pattern(width, height, lifeformId, cells);
+    }
+
 
     public void drawPreview(Graphics g, int x, int y) {
         Color alive = (Lifeform.getById(this.lifeformId).getColor());
         Color dead = Color.BLACK;
 
         Simulation sim = MainFrame.getInstance().getSimulation();
+        SimulationCanvas canvas = MainFrame.getInstance().getCanvas();
 
-        int pixelsize = MainFrame.getInstance().getCanvas().getPixelSize();
+        int pixelsize = canvas.getPixelSize();
         int simWidth = sim.getWidth();
         int simHeight = sim.getHeight();
+
+        int drawXStart = canvas.getDrawXStart();
+        int drawYStart = canvas.getDrawYStart();
 
         for (int i = 0; i < this.height; i++)
             for (int j = 0; j < this.width; j++) {
@@ -104,14 +138,14 @@ public class Pattern {
                     g.setColor(alive);
                 }
                 g.setColor((cells[i][j] == 1)?alive:dead);
-                g.fillRect((x + j)*pixelsize, (y + i)*pixelsize, pixelsize, pixelsize);
+                g.fillRect((x + j - drawXStart)*pixelsize, (y + i - drawYStart)*pixelsize, pixelsize, pixelsize);
         }
 
         if ((x + this.width) > simWidth || (y + this.height) > simHeight || x < 0 || y < 0)
             g.setColor(Color.RED);
         else
             g.setColor(Color.LIGHT_GRAY);
-        g.drawRect(x*pixelsize, y*pixelsize, this.width * pixelsize - 1, this.height*pixelsize - 1);
+        g.drawRect((x - drawXStart)*pixelsize, (y - drawYStart)*pixelsize, this.width * pixelsize - 1, this.height*pixelsize - 1);
     }
 
     public void place(int x, int y) {

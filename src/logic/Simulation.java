@@ -32,7 +32,7 @@ public class Simulation
         this.canvas = canvas;
         this.console = console;
 
-        int pixelsize = canvas.getPixelSize();
+        int pixelsize = canvas.getBasePixelSize();
 
         this.data = new Cell[height][width];
         for (int i = 0; i < height; i++)

@@ -87,16 +87,16 @@ public class Console {
                 String s = args.split(" ")[0];
                 try {
                     int size = Integer.parseInt(s);
-                    if (MainFrame.getInstance().getCanvas().getPixelSize() == size) { display.println("Size is already " + size); return; }
+                    if (MainFrame.getInstance().getCanvas().getBasePixelSize() == size) { display.println("Size is already " + size); return; }
                     if (size <= 0) { display.println("Size must be greater than 0"); return; }
 
-                    boolean res = MainFrame.getInstance().getCanvas().setPixelSize(size);
+                    boolean res = MainFrame.getInstance().getCanvas().setBasePixelsize(size);
                     if (!res) { display.println("Size too large"); return; }
                     this.sim = MainFrame.getInstance().getSimulation();
                     display.println("Size set to " + size);
                 } catch (NumberFormatException e) {display.println(s + " is not an integer.");}} break;
             case "getsize": case "size": {
-                int size = MainFrame.getInstance().getCanvas().getPixelSize();
+                int size = MainFrame.getInstance().getCanvas().getBasePixelSize();
                 display.println("Current size of a single cell: " + size + "x" + size + " pixels");} break;
             case "new":
                 MainFrame.getInstance().getCanvas().newSimulation(); break;
@@ -130,6 +130,10 @@ public class Console {
             case "next": case "f": case "frame": {
                 sim.pause(); sim.nextFrame();} break;
             case "debug": {
+                if (args == null) {
+                    display.println("Usage: debug <x> <y>\nDisplay data about cell (x,y)");
+                    return;
+                }
                 String[] coords = args.split(" ");
                 if (coords.length < 2) {display.println("Coordinate(s) missing from command"); return;}
                 int x, y;

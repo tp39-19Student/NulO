@@ -19,9 +19,10 @@ public class Cell
 
     private Lifeform nextLife;
 
-    private final int drawSize;
-    private final int drawX;
-    private final int drawY;
+    private int drawSize;
+    private int drawX;
+    private int drawY;
+    private boolean shouldDraw;
 
 
     private Color nextColor;
@@ -32,17 +33,18 @@ public class Cell
     private int change;
     private final int[] livingNeighbourCounts;
 
-    public Cell(int x, int y, int pixelsize) {
-        this(x, y, pixelsize, null);
+    public Cell(int x, int y, int basePixelSize) {
+        this(x, y, basePixelSize, null);
     }
 
-    public Cell(int x, int y, int pixelsize, Lifeform life) {
+    public Cell(int x, int y, int basePixelSize, Lifeform life) {
         this.x = x;
         this.y = y;
 
-        this.drawSize = pixelsize;
+        this.drawSize = basePixelSize;
         this.drawX = this.x * this.drawSize;
         this.drawY = this.y * this.drawSize;
+        this.shouldDraw = true;
 
         this.state = 0;
         this.nextState = 0;
@@ -265,7 +267,7 @@ public class Cell
     }
 
     public void paint(Graphics g) {
-        if (this.nextColor != null) {
+        if (shouldDraw && this.nextColor != null) {
             g.setColor(this.nextColor);
             this.nextColor = null;
             g.fillRect(drawX, drawY, drawSize, drawSize);
@@ -274,6 +276,16 @@ public class Cell
 
     public void repaintNextFrame() {
         this.nextColor = this.getColor();
+    }
+
+    public void setShouldDraw(boolean shouldDraw) {
+        this.shouldDraw = shouldDraw;
+        if (shouldDraw) repaintNextFrame();
+    }
+    public void setDrawParams(int drawSize, int drawXStart, int drawYStart) {
+        this.drawSize = drawSize;
+        this.drawX = drawXStart;
+        this.drawY = drawYStart;
     }
 
     public String cellDebug() {

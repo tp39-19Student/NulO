@@ -242,7 +242,10 @@ public class MainFrame extends JFrame {
         speedLabel.setBorder(null);
         speedLabel.setFont(mainFont);
         speedLabel.setForeground(Color.LIGHT_GRAY);
-        speedLabel.addActionListener(e -> MainFrame.getInstance().getSimulation().setFps(speedLabel.getText()));
+        speedLabel.addActionListener(e -> {
+            MainFrame.getInstance().getSimulation().setFps(speedLabel.getText());
+            canvas.requestFocusInWindow();
+        });
         speedLabel.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
@@ -323,6 +326,10 @@ public class MainFrame extends JFrame {
                     case KeyEvent.VK_SPACE: sim.togglePlayPause(); break;
                     case KeyEvent.VK_TAB: sim.toggleFps(); break;
                     case KeyEvent.VK_F: sim.pause(); sim.nextFrame(); break;
+                    case KeyEvent.VK_W: canvas.pan(0, -canvas.getPanStep()); break;
+                    case KeyEvent.VK_A: canvas.pan(-canvas.getPanStep(), 0); break;
+                    case KeyEvent.VK_S: canvas.pan(0, canvas.getPanStep()); break;
+                    case KeyEvent.VK_D: canvas.pan(canvas.getPanStep(), 0); break;
                     default: return false;
                 }
                 e.consume();
