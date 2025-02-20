@@ -6,6 +6,10 @@ import life.Lifeform;
 
 import javax.swing.Timer;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Simulation
 {
@@ -135,6 +139,19 @@ public class Simulation
     private void updateSpeedLabel() {
         MainFrame.getInstance().updateSpeedLabel(this.fps + "");
     }
+
+    public List<Map.Entry<Lifeform, Integer>> getCounts() {
+        HashMap<Lifeform, Integer> map = new HashMap<>();
+        for (Cell[] row: data)
+            for (Cell cell: row) {
+                Lifeform life = cell.getLife();
+                if (life != null) map.put(life, map.getOrDefault(life, 0) + 1);
+            }
+
+        return map.entrySet().stream().sorted((e1, e2) -> e2.getValue() - e1.getValue()).collect(Collectors.toList());
+    }
+
+    public String cellDebug(int x, int y) { return this.data[y][x].cellDebug(); }
 
     public int getFps() {return this.fps;}
     public boolean getRunning() {return  this.running;}

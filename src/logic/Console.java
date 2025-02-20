@@ -4,17 +4,21 @@ import display.ConsoleDisplay;
 import display.MainFrame;
 import life.Lifeform;
 
+import java.util.List;
+import java.util.Map;
+
 public class Console {
-    private static final String helpLine = "Commands:\n" +
+    private static final String helpLine = "====== Commands ======\n" +
             "play - Continue simulation\n" +
             "pause - Pause simulation\n" +
             "f - Next frame\n" +
-            "setsize <Number> - Set size of single cell to NxN pixels\n" +
-            "speed <Number> - Set simulation speed to N generations per second.\n" +
+            "setsize <N> - Set size of single cell to NxN pixels\n" +
+            "speed <N> - Set simulation speed to N generations per second.\n" +
             "simdim - Display simulation size in cells\n" +
             "clear - Clear console\n" +
             "new - Clear simulation\n" +
-            "count - Count living cells";
+            "count - Count living cells\n" +
+            "debug <x> <y> - Display data about cell (x,y)";
 
     private static final int historyLines = 20;
 
@@ -65,10 +69,10 @@ public class Console {
                 display.clear(); break;
             case "echo":
                 display.println(args); break;
-            case "help":
+            case "help": case "info": case "commands": case "?":
                 display.println(helpLine); break;
             case "simdim": case "dim":
-                display.println("Simulation fits " + sim.getWidth() + " x " + sim.getHeight() + " cells"); break;
+                display.println("Simulation fits " + sim.getWidth() + " x " + sim.getHeight() + " cells (Total " + (sim.getWidth() * sim.getHeight()) + ")"); break;
             case "play": case "run": case "start": case "resume":
                 sim.play(); break;
             case "pause": case "stop":
@@ -101,8 +105,13 @@ public class Console {
             case "life":
                 display.println(Lifeform.GOL.toString());break;
             case "count": {
-                //#TODO
-                display.println("Reworking");} break;
+                display.println("====== Cell counts ======");
+                List<Map.Entry<Lifeform, Integer>> counts = sim.getCounts();
+                for (Map.Entry<Lifeform, Integer> entry : counts) {
+                    Lifeform life = entry.getKey();
+                    display.println(life.getName() + " (" + life.getRuleString() + "): " + entry.getValue());
+                }
+            } break;
             case "speed": case "setspeed": case "fps": case "gps": {
                 if (args == null) {
                     display.println("Usage: speed <Number>\nSet the speed to N generations per second.");
@@ -120,6 +129,17 @@ public class Console {
                 } catch (NumberFormatException e) {display.println(s + " is not an integer.");}} break;
             case "next": case "f": case "frame": {
                 sim.pause(); sim.nextFrame();} break;
+            case "debug": {
+                String[] coords = args.split(" ");
+                if (coords.length < 2) {display.println("Coordinate(s) missing from command"); return;}
+                int x, y;
+                try {
+                    x = Integer.parseInt(coords[0]);
+                    y = Integer.parseInt(coords[1]);
+                } catch (NumberFormatException e) {display.println("Invalid coordinates"); return;}
+                if (x < 0 || y < 0 || x >= sim.getWidth() || y >= sim.getHeight()) {display.println("Out of bounds"); return;}
+                println(sim.cellDebug(x, y));
+            } break;
             default:
                 display.println("Unknown command: " + (cmd.length()<20?cmd:"..."));
         }

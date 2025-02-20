@@ -26,7 +26,10 @@ public class Pattern {
 
     public static Pattern parse(String str) {
         Matcher m;
-        if ((m = RLE_Format.matcher(str)).matches()) return RLE(m);
+        str = str.trim();
+        if ((m = RLE_Format.matcher(str)).matches()) {
+            return RLE(m);
+        }
 
         return null;
     }

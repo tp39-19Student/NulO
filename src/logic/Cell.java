@@ -275,4 +275,26 @@ public class Cell
     public void repaintNextFrame() {
         this.nextColor = this.getColor();
     }
+
+    public String cellDebug() {
+        StringBuilder str = new StringBuilder();
+        str.append("===== Cell (x = ").append(this.x).append(", y = ").append(this.y).append(") =====\n");
+        str.append("Lifeform: ");
+        if (this.life == null) str.append("None\n");
+        else str.append("#").append(this.life.getId()).append(' ').append(this.life.getName()).append(" (").append(this.life.getRuleString()).append(")\n");
+
+        str.append("== Neighbour Counts ==\n");
+        int range = -1;
+        int neighbourCount = 0;
+        if (this.life != null) range = this.life.getRange();
+        for (int i = 0; i < Lifeform.MAX_RANGE; i++) {
+            neighbourCount += this.livingNeighbourCounts[i];
+            if (i == (range - 1)) str.append("> ");
+            str.append("Range ").append(i + 1).append(": ").append(neighbourCount).append('\n');
+        }
+
+        return str.toString();
+    }
+
+    public Lifeform getLife() { return this.life; }
 }

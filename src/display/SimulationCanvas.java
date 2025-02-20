@@ -94,10 +94,10 @@ public class SimulationCanvas extends JPanel {
                     return;
                 }
                 if (buttonPressed == MouseEvent.BUTTON2) {
-                    //TODO - Print cell to console
                     int selectX = e.getX()/pixelSize;
                     int selectY = e.getY()/pixelSize;
 
+                    MainFrame.getInstance().getConsole().command("debug " + selectX + " " + selectY);
                     return;
                 }
                 if (buttonPressed != MouseEvent.BUTTON1 && buttonPressed != MouseEvent.BUTTON3) return;

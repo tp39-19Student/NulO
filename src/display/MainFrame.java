@@ -90,6 +90,7 @@ public class MainFrame extends JFrame {
         // ======= Pattern Buttons =======
         Font patternFont = mainFont.deriveFont(20F);
         JPanel buttonSet = new JPanel(new GridLayout(1, 2));
+        buttonSet.setBackground(backgroundColor);
         button = new JButton("INSERT PATTERN");
         button.setFont(patternFont);
         button.setBackground(patternToolColor);
