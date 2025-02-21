@@ -13,7 +13,7 @@ public class SimulationCanvas extends JPanel {
 
     private Simulation sim = null;
     private int basePixelSize = 6;
-    private int pixelSize = 6;
+    private int pixelSize = basePixelSize;
     private int width = -1;
     private int height = -1;
     private int simWidth = -1;
@@ -43,7 +43,7 @@ public class SimulationCanvas extends JPanel {
     int drawXEnd;
     int drawYStart;
     int drawYEnd;
-    int panStep = 600/pixelSize;
+    int panStep;
 
     public SimulationCanvas() {
         super();
@@ -60,17 +60,8 @@ public class SimulationCanvas extends JPanel {
                 simWidth = (width - (width%pixelSize))/basePixelSize;
                 simHeight = (height - (height%pixelSize))/basePixelSize;
 
-                simEndX = simWidth*basePixelSize;
-                simEndY = simHeight*basePixelSize;
-                extraX = width - simEndX;
-                extraY = height - simEndY;
-
-                drawXStart = 0;
-                drawXEnd = simWidth;
-                drawYStart = 0;
-                drawYEnd = simHeight;
-
                 c.newSimulation();
+
                 MainFrame.getInstance().setSelectedLifeform(Lifeform.GOL);
             }
         });
@@ -180,11 +171,7 @@ public class SimulationCanvas extends JPanel {
                 int aroundX = e.getX()/pixelSize + drawXStart;
                 int aroundY = e.getY()/pixelSize + drawYStart;
 
-                if (amount < 0) {
-                    zoomInAround(aroundX, aroundY);
-                } else {
-                    zoomOutAround(aroundX, aroundY);
-                }
+                zoomAround(aroundX, aroundY, amount);
             }
         });
     }
@@ -250,27 +237,28 @@ public class SimulationCanvas extends JPanel {
         return true;
     }
 
+    private void setDrawingBounds(int drawXStart, int drawYStart, int drawSize) {
+        int drawXEnd = drawXStart + (width/drawSize);
+        int drawYEnd = drawYStart + (height/drawSize);
+        setDrawingBounds(drawXStart, drawXEnd, drawYStart, drawYEnd);
+    }
+
     private void setDrawingBounds(int drawXStart, int drawXEnd, int drawYStart, int drawYEnd) {
-        //Pan if out of frame
-        if (drawXStart < 0) {
-            drawXEnd -= drawXStart;
-            drawXStart = 0;
-        } else if (drawXEnd > simWidth) {
-            drawXStart -= (drawXEnd - simWidth);
-            drawXEnd = simWidth;
-        }
-        if (drawYStart < 0) {
-            drawYEnd -= drawYStart;
-            drawYStart = 0;
-        } else if (drawYEnd > simHeight) {
-            drawYStart -= (drawYEnd - simHeight);
-            drawYEnd = simHeight;
-        }
+        //Pan if out of bounds
+        if (drawXStart < 0) {drawXEnd -= drawXStart; drawXStart = 0;}
+        else if (drawXEnd > simWidth) {drawXStart -= (drawXEnd - simWidth); drawXEnd = simWidth;}
+        if (drawYStart < 0) {drawYEnd -= drawYStart; drawYStart = 0;}
+        else if (drawYEnd > simHeight) {drawYStart -= (drawYEnd - simHeight); drawYEnd = simHeight;}
 
-
-        if (drawXStart >= drawXEnd || drawYStart >= drawYEnd) {return;}
-        if ((width / (drawXEnd - drawXStart)) != (height / (drawYEnd - drawYStart))) {return;}
-        if ((drawXEnd - drawXStart) > simWidth || (drawYEnd - drawYStart) > simHeight) {return;}
+            //Inverted
+        if (((drawXStart >= drawXEnd || drawYStart >= drawYEnd))
+                //Not Square
+                || (((int) Math.round(simWidth * 1.0 / (drawXEnd - drawXStart)) != (int) Math.round(simHeight * 1.0 / (drawYEnd - drawYStart))))
+                //Out of Bounds
+                || ((drawXStart < 0 || drawYStart < 0 || drawXEnd > simWidth || drawYEnd > simHeight))
+        ) {
+            return;
+        }
 
         this.drawXStart = drawXStart;
         this.drawXEnd = drawXEnd;
@@ -281,22 +269,9 @@ public class SimulationCanvas extends JPanel {
         this.repaint();
     }
 
-    private void zoomInAround(int indexX, int indexY) {
-        int zoom = (pixelSize/basePixelSize) * 2;
-        setDrawingBounds(indexX - simWidth/(2*zoom), indexX + simWidth/(2*zoom), indexY - simHeight/(2*zoom), indexY + simHeight/(2*zoom));
-    }
-    private void zoomOutAround(int indexX, int indexY) {
-        if (pixelSize == basePixelSize) return;
-        int zoom = (pixelSize/basePixelSize) / 2;
-        if (zoom < 1)
-            setDrawingBounds(0, simWidth, 0, simHeight);
-        else
-            setDrawingBounds(indexX - simWidth/(2*zoom), indexX + simWidth/(2*zoom), indexY - simHeight/(2*zoom), indexY + simHeight/(2*zoom));
-    }
-
     private void updateCellDrawing() {
         Cell[][] data = sim.getData();
-        int drawSize = (int)(width / (drawXEnd - drawXStart));
+        int drawSize = (int) Math.round(width * 1.0 / (drawXEnd - drawXStart));
 
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
@@ -310,7 +285,22 @@ public class SimulationCanvas extends JPanel {
         }
 
         this.pixelSize = drawSize;
-        this.panStep = 600/pixelSize;
+        this.panStep = (this.width/4)/this.pixelSize;
+    }
+
+    private void zoomAround(int indexX, int indexY, int direction) {
+        int zoom = (pixelSize/basePixelSize);
+        if (direction > 0) zoom = zoom / 2;
+        else if (direction < 0) zoom = zoom * 2;
+        else return;
+
+        if (zoom < 1) setDrawingBounds(0, simWidth, 0, simHeight);
+
+        else {
+            double factorX = ((indexX - drawXStart) * 1.0) / (drawXEnd - drawXStart - 1);
+            double factorY = ((indexY - drawYStart) * 1.0) / (drawYEnd - drawYStart - 1);
+            setDrawingBounds((int)Math.round(indexX - (factorX)*simWidth/(zoom)), (int) Math.round(indexY - (factorY)*simHeight/(zoom)), zoom * basePixelSize);
+        }
     }
 
 
@@ -318,6 +308,12 @@ public class SimulationCanvas extends JPanel {
         if (sim != null) sim.kill();
         this.sim = new Simulation(simWidth, simHeight, this, MainFrame.getInstance().getConsole());
         MainFrame.getInstance().getConsole().setSimulation(this.sim);
+
+        simEndX = simWidth*basePixelSize;
+        simEndY = simHeight*basePixelSize;
+        extraX = width - simEndX;
+        extraY = height - simEndY;
+
         this.setDrawingBounds(0, simWidth, 0, simHeight);
     }
 

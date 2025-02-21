@@ -97,7 +97,10 @@ public class Console {
                 } catch (NumberFormatException e) {display.println(s + " is not an integer.");}} break;
             case "getsize": case "size": {
                 int size = MainFrame.getInstance().getCanvas().getBasePixelSize();
-                display.println("Current size of a single cell: " + size + "x" + size + " pixels");} break;
+                int displayedSize = MainFrame.getInstance().getCanvas().getPixelSize();
+                display.println("Current size of a single cell: " + size + "x" + size + " pixels");
+                if (displayedSize != size) display.println("(Zoomed in to " + displayedSize + "x" + displayedSize + " pixels)");
+            } break;
             case "new":
                 MainFrame.getInstance().getCanvas().newSimulation(); break;
             case "crazy": case "psycho": case "art":
