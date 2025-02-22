@@ -36,14 +36,14 @@ public class SimulationCanvas extends JPanel {
 
     //Pattern
     private Pattern loadedPattern;
-    int patternState; // 0 - None, 1 - Loaded, 2 - Finished (Block Brush)
+    private int patternState; // 0 - None, 1 - Loaded, 2 - Finished (Block Brush)
 
     //Zoom / Pan (Cell Indexes)
-    int drawXStart;
-    int drawXEnd;
-    int drawYStart;
-    int drawYEnd;
-    int panStep;
+    private int drawXStart;
+    private int drawXEnd;
+    private int drawYStart;
+    private int drawYEnd;
+    private int panStep;
 
     public SimulationCanvas() {
         super();
@@ -305,8 +305,10 @@ public class SimulationCanvas extends JPanel {
 
 
     public void newSimulation() {
+        boolean running = false;
+        if (sim != null && sim.getRunning()) running = true;
         if (sim != null) sim.kill();
-        this.sim = new Simulation(simWidth, simHeight, this, MainFrame.getInstance().getConsole());
+        this.sim = new Simulation(simWidth, simHeight, this, MainFrame.getInstance().getConsole(), sim!=null?sim.getFps():Simulation.DEFAULT_SPEED);
         MainFrame.getInstance().getConsole().setSimulation(this.sim);
 
         simEndX = simWidth*basePixelSize;
@@ -315,6 +317,7 @@ public class SimulationCanvas extends JPanel {
         extraY = height - simEndY;
 
         this.setDrawingBounds(0, simWidth, 0, simHeight);
+        if (running) sim.play();
     }
 
     public int getBasePixelSize() { return basePixelSize; }

@@ -27,6 +27,9 @@ public class Simulation
     private final Console console;
 
     public Simulation(int width, int height, SimulationCanvas canvas, Console console) {
+        this(width, height, canvas, console, DEFAULT_SPEED);
+    }
+    public Simulation(int width, int height, SimulationCanvas canvas, Console console, int fps) {
         this.width = width;
         this.height = height;
         this.canvas = canvas;
@@ -44,7 +47,7 @@ public class Simulation
 
         this.running = false;
         MainFrame.getInstance().updatePlayPause(this.running);
-        this.fps = DEFAULT_SPEED;
+        this.fps = fps;
         updateSpeedLabel();
 
         Simulation s = this;

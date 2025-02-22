@@ -10,6 +10,9 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class MainFrame extends JFrame {
+    private static final int height = Toolkit.getDefaultToolkit().getScreenSize().height;
+    private static final int width = Toolkit.getDefaultToolkit().getScreenSize().width;
+
     public static final Color backgroundColor = new Color(55, 55, 111);
 
     private static final Color patternToolColor = new Color(115, 103, 208);
@@ -26,11 +29,10 @@ public class MainFrame extends JFrame {
     private static final Color speedChangeColor = lifeformListSelectColor;
 
 
-    private static final Font mainFont = new Font(Font.MONOSPACED, Font.PLAIN, 30);
+    private static final float fontSize = 10 + (width/100);
+    private static final Font mainFont = new Font(Font.MONOSPACED, Font.PLAIN, (int)fontSize);
 
     private static MainFrame mainFrame = null;
-    private static final int height = Toolkit.getDefaultToolkit().getScreenSize().height;
-    private static final int width = Toolkit.getDefaultToolkit().getScreenSize().width;
     private static final int margin = 10;
 
     private final SimulationCanvas canvas;
@@ -44,6 +46,8 @@ public class MainFrame extends JFrame {
     private MainFrame() {
         super();
         JFrame window = this;
+
+        this.getContentPane().setBackground(backgroundColor);
 
         this.setUndecorated(true);
         this.setResizable(false);
@@ -88,30 +92,20 @@ public class MainFrame extends JFrame {
         );
 
         // ======= Pattern Buttons =======
-        Font patternFont = mainFont.deriveFont(20F);
-        JPanel buttonSet = new JPanel(new GridLayout(1, 2));
+        Font patternFont = mainFont.deriveFont(fontSize*2/3);
+        JPanel buttonSet = new JPanel(new GridLayout(1, 3));
         buttonSet.setBackground(backgroundColor);
-        button = new JButton("INSERT PATTERN");
-        button.setFont(patternFont);
-        button.setBackground(patternToolColor);
-        button.setFocusPainted(false);
-        buttonSet.add(button);
-        button = new JButton("NEW PATTERN");
-        button.setFont(patternFont);
-        button.setBackground(newColor);
-        button.setFocusPainted(false);
-        buttonSet.add(button);
-        this.add(buttonSet, c);
-        button = new JButton("IMPORT PATTERN");
-        button.setFont(patternFont);
-        button.setBackground(inactiveColor);
-        button.setForeground(Color.LIGHT_GRAY);
-        button.setFocusPainted(false);
-        button.addActionListener(a -> {
-            importPatternDialog();
-        });
+
+        button = makeButton("SAVED PATTERNS", patternFont, patternToolColor, null);
         buttonSet.add(button);
 
+        button = makeButton("NEW PATTERN", patternFont, newColor, null);
+        buttonSet.add(button);
+
+        button = makeButton("IMPORT PATTERN", patternFont, inactiveColor, a->importPatternDialog());
+        buttonSet.add(button);
+
+        this.add(buttonSet, c);
 
         // ======= Lifeform Brush =======
         JPanel brushPanel = new JPanel(new BorderLayout(0, margin));
@@ -123,7 +117,7 @@ public class MainFrame extends JFrame {
         brushList.setBorder(null);
         brushList.setSelectionBackground(lifeformListSelectColor);
         brushList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        brushList.setFont(mainFont.deriveFont(18F));
+        brushList.setFont(mainFont.deriveFont(fontSize*2/3));
         brushList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 canvas.setLifeformBrush(this.brushList.getSelectedValue());
@@ -140,15 +134,20 @@ public class MainFrame extends JFrame {
         // ======= New Lifeform =======
         JPanel newLifePanel = new JPanel(new BorderLayout(5, 0));
         newLifePanel.setBackground(backgroundColor);
-        Font newLifeFont = mainFont.deriveFont(20F);
+        Font newLifeFont = mainFont.deriveFont(fontSize*2/3);
 
         class JTextFieldHinted extends JTextField {
             private final String hint;
             private int fontHeight = -1;
 
-            public JTextFieldHinted(int i, String hint) {
-                super(i);
+            public JTextFieldHinted(int columns, String hint, Font font, Color foregroundColor, Color backgroundColor) {
+                super(columns);
                 this.hint = hint;
+                this.setFont(font);
+                this.setForeground(foregroundColor);
+                this.setCaretColor(foregroundColor);
+                this.setBackground(backgroundColor);
+                this.setBorder(null);
             }
 
             @Override
@@ -163,24 +162,13 @@ public class MainFrame extends JFrame {
             }
         }
 
-        JTextField newLifeName = new JTextFieldHinted(15, "Lifeform Name");
-        newLifeName.setBorder(null);
-        newLifeName.setFont(newLifeFont);
-        newLifeName.setForeground(Color.CYAN);
-        newLifeName.setBackground(lifeformListColor);
-        newLifeName.setCaretColor(Color.CYAN);
+        JTextField newLifeName = new JTextFieldHinted(15, "Lifeform Name", newLifeFont, Color.CYAN, lifeformListColor);
+        newLifePanel.add(newLifeName, BorderLayout.WEST);
 
-        JTextField newLifeRulestring = new JTextFieldHinted(30, "Lifeform Rules");
-        newLifeRulestring.setBorder(null);
-        newLifeRulestring.setFont(newLifeFont);
-        newLifeRulestring.setForeground(Color.WHITE);
-        newLifeRulestring.setBackground(lifeformListColor);
-        newLifeRulestring.setCaretColor(Color.WHITE);
+        JTextField newLifeRulestring = new JTextFieldHinted(30, "Lifeform Rules", newLifeFont, Color.WHITE, lifeformListColor);
+        newLifePanel.add(newLifeRulestring, BorderLayout.CENTER);
 
-        JButton newLifeButton = new JButton("ADD");
-        newLifeButton.setFont(newLifeFont);
-        newLifeButton.setBackground(newColor);
-        newLifeButton.addActionListener(a -> {
+        button = makeButton("ADD", newLifeFont, newColor, a -> {
             if (newLifeName.getText().isEmpty() || newLifeRulestring.getText().isEmpty()) return;
             Lifeform newLifeform = Lifeform.create(newLifeName.getText(), newLifeRulestring.getText());
             if (newLifeform != null) {
@@ -189,10 +177,7 @@ public class MainFrame extends JFrame {
                 setSelectedLifeform(newLifeform);
             }
         });
-
-        newLifePanel.add(newLifeName, BorderLayout.WEST);
-        newLifePanel.add(newLifeRulestring, BorderLayout.CENTER);
-        newLifePanel.add(newLifeButton, BorderLayout.EAST);
+        newLifePanel.add(button, BorderLayout.EAST);
 
         brushPanel.add(newLifePanel, BorderLayout.SOUTH);
         this.add(brushPanel, c);
@@ -217,23 +202,17 @@ public class MainFrame extends JFrame {
         // ======= Speed Controls =======
         JPanel simControl = new JPanel(new GridLayout(1, 3));
         simControl.setBackground(backgroundColor);
-        button = new JButton("⏯");
-        button.setFont(mainFont.deriveFont(50F));
-        button.setBackground(playColor);
-        button.setFocusPainted(false);
-        playPauseButton = button;
-        button.addActionListener(a -> MainFrame.getInstance().getSimulation().togglePlayPause());
-        simControl.add(button);
+
+        this.playPauseButton = makeButton("⏯", mainFont.deriveFont(fontSize*2), playColor, a ->
+                MainFrame.getInstance().getSimulation().togglePlayPause());
+        simControl.add(playPauseButton);
 
         JPanel speedControl = new JPanel(new GridLayout(3, 1));
         speedControl.setBackground(backgroundColor);
-        button = new JButton("▲");
-        button.setFont(mainFont);
-        button.setBackground(speedChangeColor);
-        button.setForeground(Color.LIGHT_GRAY);
-        button.setFocusPainted(false);
-        button.addActionListener(a -> MainFrame.getInstance().getSimulation().fpsUp());
+
+        button = makeButton("▲", mainFont, speedChangeColor, a -> MainFrame.getInstance().getSimulation().fpsUp());
         speedControl.add(button);
+
         JPanel speedValuePanel = new JPanel(new BorderLayout());
         speedValuePanel.setBackground(backgroundColor);
         speedLabel = new JTextField(Simulation.DEFAULT_SPEED + "", 4);
@@ -254,19 +233,19 @@ public class MainFrame extends JFrame {
             }
         });
         speedValuePanel.add(speedLabel, BorderLayout.CENTER);
+
         JLabel genS = new JLabel(" Gen/s ");
         genS.setFont(mainFont);
         genS.setForeground(Color.lightGray);
         speedValuePanel.add(genS, BorderLayout.EAST);
+
         speedControl.add(speedValuePanel);
-        button = new JButton("▼");
-        button.setFont(mainFont);
-        button.setBackground(speedChangeColor);
-        button.setForeground(Color.LIGHT_GRAY);
-        button.setFocusPainted(false);
-        button.addActionListener(a -> MainFrame.getInstance().getSimulation().fpsDown());
+
+        button = makeButton("▼", mainFont, speedChangeColor, a -> MainFrame.getInstance().getSimulation().fpsDown());
         speedControl.add(button);
+
         simControl.add(speedControl);
+
         c.weighty = 0.02;
         this.add(simControl, c);
         c.weighty = 0.125;
@@ -277,44 +256,13 @@ public class MainFrame extends JFrame {
         buttonSet = new JPanel(new BorderLayout(margin*3, 0));
         buttonSet.setBackground(backgroundColor);
 
-        button = new JButton("QUIT");
-        button.setFont(mainFont);
-        button.setForeground(Color.WHITE);
-        button.setBackground(quitColor);
-        button.addActionListener(e -> window.dispose());
-        button.setFocusPainted(false);
-
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                MainFrame.getInstance().getSimulation().kill();
-                super.windowClosed(e);
-            }
-        });
+        button = makeButton("QUIT", mainFont, quitColor, a -> window.dispose());
         buttonSet.add(button, BorderLayout.CENTER);
 
-        button = new JButton(" NEW ");
-        button.setFont(mainFont);
-        button.setBackground(newColor.darker());
-        button.addActionListener(a -> canvas.newSimulation());
-        button.setFocusPainted(false);
-
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                MainFrame.getInstance().getSimulation().kill();
-                super.windowClosed(e);
-            }
-        });
+        button = makeButton(" NEW ", mainFont, newColor.darker(), a -> canvas.newSimulation());
         buttonSet.add(button, BorderLayout.WEST);
 
         this.add(buttonSet, c);
-
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.getContentPane().setBackground(backgroundColor);
-
-        this.setVisible(true);
-        GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0].setFullScreenWindow(this);
 
         // ======= Hotkeys =======
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e-> {
@@ -337,6 +285,19 @@ public class MainFrame extends JFrame {
             }
             return false;
         });
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                MainFrame.getInstance().getSimulation().kill();
+                super.windowClosed(e);
+            }
+        });
+
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0].setFullScreenWindow(this);
+        this.setVisible(true);
     }
 
     private void importPatternDialog() {
@@ -351,7 +312,7 @@ public class MainFrame extends JFrame {
         JTextArea patternText = new JTextArea();
         patternText.setBackground(lifeformListColor);
         patternText.setForeground(Color.WHITE);
-        patternText.setFont(mainFont.deriveFont(20F));
+        patternText.setFont(mainFont.deriveFont(fontSize*2/3));
         patternText.setLineWrap(false);
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         buttonPanel.setBackground(backgroundColor);
@@ -395,6 +356,19 @@ public class MainFrame extends JFrame {
         brushListModel.clear();
         for (Lifeform l : Lifeform.getAll()) brushListModel.addElement(l);
         brushList.revalidate();
+    }
+
+    private JButton makeButton(String text, Font font, Color backgroundColor, ActionListener listener) {
+        JButton button = new JButton(text);
+        button.setBackground(backgroundColor);
+        button.setFont(font);
+        //0.2126*R + 0.7152*G + 0.0722*B
+        if ((backgroundColor.getRed()*0.2126 + backgroundColor.getGreen()*0.7152 + backgroundColor.getBlue()*0.0722) < 127)
+            button.setForeground(Color.LIGHT_GRAY);
+        //button.setForeground(foregroundColor);
+        button.addActionListener(listener);
+        button.setFocusPainted(false);
+        return button;
     }
 
     public Simulation getSimulation() { return this.canvas.getSimulation(); }
