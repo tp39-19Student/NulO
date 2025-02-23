@@ -6,6 +6,7 @@ import logic.Console;
 import logic.Simulation;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -42,6 +43,10 @@ public class MainFrame extends JFrame {
     private final JButton playPauseButton;
     private final JList<Lifeform> brushList;
     private final DefaultListModel<Lifeform> brushListModel;
+
+    private final JScrollPane patternListScrollPane;
+    private final JList<Pattern> patternList;
+    private final DefaultListModel<Pattern> patternListModel;
 
     private MainFrame() {
         super();
@@ -96,7 +101,42 @@ public class MainFrame extends JFrame {
         JPanel buttonSet = new JPanel(new GridLayout(1, 3));
         buttonSet.setBackground(backgroundColor);
 
-        button = makeButton("SAVED PATTERNS", patternFont, patternToolColor, null);
+        button = makeButton("PATTERNS", patternFont, patternToolColor, a -> savedPatternsDialog());
+        patternListModel = new DefaultListModel<>();
+        patternList = new JList<>(patternListModel);
+        patternList.setBackground(Color.BLACK);
+        patternList.setBorder(null);
+        patternList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        patternList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                return;
+            }
+        });
+        patternList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        patternList.setVisibleRowCount(-1);
+        patternList.setCellRenderer(new DefaultListCellRenderer() {
+
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                Icon thumbnail = ((Pattern)value).getThumbnail();
+                label.setIcon(thumbnail);
+                label.setText("");
+
+                if (isSelected) label.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 10));
+                else label.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+
+                return label;
+            }
+        });
+
+        patternListScrollPane = new JScrollPane(patternList);
+        patternListScrollPane.setBackground(Color.BLACK);
+        patternListScrollPane.setBorder(null);
+        patternListScrollPane.getVerticalScrollBar().setBackground(Color.BLACK);
+        patternListScrollPane.getHorizontalScrollBar().setBackground(Color.BLACK);
+
+
         buttonSet.add(button);
 
         button = makeButton("NEW PATTERN", patternFont, newColor, null);
@@ -124,12 +164,11 @@ public class MainFrame extends JFrame {
             }
         });
         brushList.setVisibleRowCount(8);
-        JScrollPane listScrollPane = new JScrollPane(brushList);
-        listScrollPane.setBackground(backgroundColor);
-        listScrollPane.setBorder(null);
-        JScrollBar vertical = listScrollPane.getVerticalScrollBar();
-        vertical.setBackground(lifeformListColor);
-        brushPanel.add(listScrollPane, BorderLayout.CENTER);
+        JScrollPane brushListScrollPane = new JScrollPane(brushList);
+        brushListScrollPane.setBackground(backgroundColor);
+        brushListScrollPane.setBorder(null);
+        brushListScrollPane.getVerticalScrollBar().setBackground(lifeformListColor);
+        brushPanel.add(brushListScrollPane, BorderLayout.CENTER);
 
         // ======= New Lifeform =======
         JPanel newLifePanel = new JPanel(new BorderLayout(5, 0));
@@ -303,6 +342,12 @@ public class MainFrame extends JFrame {
     private void importPatternDialog() {
         JDialog dialog = new JDialog(this, "Import Pattern", true);
         dialog.setLayout(new BorderLayout(0, 20));
+
+        JLabel label = new JLabel("Import Pattern (RLE / Plaintext)");
+        label.setFont(mainFont);
+        label.setForeground(Color.LIGHT_GRAY);
+        dialog.add(label, BorderLayout.NORTH);
+
         dialog.getContentPane().setBackground(backgroundColor);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setSize(width/2, height/2);
@@ -314,30 +359,67 @@ public class MainFrame extends JFrame {
         patternText.setForeground(Color.WHITE);
         patternText.setFont(mainFont.deriveFont(fontSize*2/3));
         patternText.setLineWrap(false);
+
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         buttonPanel.setBackground(backgroundColor);
 
-        JButton button;
-
-        button = new JButton("Import");
-        button.setBackground(newColor);
-        button.setFont(mainFont);
-        button.addActionListener(a -> {
+        JButton button = makeButton("Import", mainFont, newColor, a -> {
             Pattern p = Pattern.parse(patternText.getText());
-            if (p != null) this.canvas.setLoadedPattern(p);
+            if (p != null) {
+                this.canvas.setLoadedPattern(p);
+                this.patternListModel.addElement(p);
+            }
             dialog.dispose();
         });
         buttonPanel.add(button);
 
-        button = new JButton("Cancel");
-        button.setBackground(quitColor);
-        button.setFont(mainFont);
-        button.setForeground(Color.LIGHT_GRAY);
-        button.addActionListener(a -> dialog.dispose());
+        button = makeButton("Cancel", mainFont, quitColor, a -> dialog.dispose());
         buttonPanel.add(button);
 
         dialog.add(new JScrollPane(patternText), BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    public void savedPatternsDialog() {
+        JDialog dialog = new JDialog(this, true);
+        dialog.setLayout(new BorderLayout(20, 20));
+
+        dialog.getContentPane().setBackground(backgroundColor);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setSize(width*3/4, height*3/4);
+        dialog.setLocationRelativeTo(null);
+        dialog.setUndecorated(true);
+        dialog.getRootPane().setBorder(BorderFactory.createLineBorder(backgroundColor, 20));
+
+        dialog.add(patternListScrollPane, BorderLayout.CENTER);
+
+        JPanel optionsPanel = new JPanel(new GridLayout(2, 1));
+        optionsPanel.setBackground(backgroundColor);
+        JPanel buttonsPanel = new JPanel(new GridLayout(3, 1, 0, 10));
+        buttonsPanel.setBackground(backgroundColor);
+
+        JButton button = makeButton("Place", mainFont, patternToolColor, a -> {
+            Pattern p = patternList.getSelectedValue();
+            if (p != null) {
+                this.canvas.setLoadedPattern(p);
+                dialog.dispose();
+            }
+        });
+        buttonsPanel.add(button);
+
+        button = makeButton("Export RLE", mainFont, inactiveColor, null);
+        buttonsPanel.add(button);
+
+        button = makeButton("Export Plaintext", mainFont, inactiveColor, null);
+        buttonsPanel.add(button);
+
+        optionsPanel.add(buttonsPanel);
+        dialog.add(optionsPanel, BorderLayout.EAST);
+
+        button = makeButton("Close", mainFont, quitColor, a -> dialog.dispose());
+        dialog.add(button, BorderLayout.SOUTH);
+
         dialog.setVisible(true);
     }
 

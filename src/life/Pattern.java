@@ -4,7 +4,9 @@ import display.MainFrame;
 import display.SimulationCanvas;
 import logic.Simulation;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 
@@ -146,6 +148,29 @@ public class Pattern {
         else
             g.setColor(Color.LIGHT_GRAY);
         g.drawRect((x - drawXStart)*pixelsize, (y - drawYStart)*pixelsize, this.width * pixelsize - 1, this.height*pixelsize - 1);
+    }
+
+    public Icon getThumbnail() {
+        int pixelsize = (MainFrame.getInstance().getWidth()/4) / Math.max(this.width, this.height);
+        if (pixelsize < 1) pixelsize = 1;
+        if (pixelsize > 50) pixelsize = 50;
+
+        BufferedImage img = new BufferedImage((this.width * pixelsize) + 2, (this.height * pixelsize) + 2, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        Color alive = (Lifeform.getById(this.lifeformId).getColor());
+
+        for (int i = 0; i < height; i++)
+            for (int j = 0; j < width; j++) {
+                if (cells[i][j] == 1) g.setColor(alive);
+                else g.setColor(Color.BLACK);
+                g.fillRect((j*pixelsize) + 1, (i*pixelsize) + 1, pixelsize, pixelsize);
+            }
+
+        g.setColor(Color.LIGHT_GRAY);
+        //g.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, new float[]{10f}, 0f));
+        g.drawRect(0, 0, width*pixelsize + 1, height*pixelsize + 1);
+        g.dispose();
+        return new ImageIcon(img);
     }
 
     public void place(int x, int y) {
