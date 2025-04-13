@@ -30,7 +30,6 @@ public class LifeformLTL extends Lifeform{
             //#TODO
             this.neighbourhoodType = NeighbourhoodType.NEIGHBOURHOOD_MOORE;
             this.ruleString = ruleString;
-            regenerateRulestring();
         } else {
             this.ruleString = "";
         }
@@ -77,8 +76,61 @@ public class LifeformLTL extends Lifeform{
         }
     }
 
-    private void regenerateRulestring() {
-        //#TODO
+    @Override
+    protected void standardizeRulestring() {
+        StringBuilder str = new StringBuilder();
+
+        str.append("R").append(this.range).append(",");
+        str.append("C").append(this.states + 1).append(",");
+
+        str.append("S");
+
+        int leftCursor = 0;
+        int rightCursor;
+        boolean first = true;
+
+        while (leftCursor < sRules.length) {
+            while (leftCursor < sRules.length && !sRules[leftCursor]) leftCursor++;
+            if (leftCursor == sRules.length) break;
+
+            rightCursor = leftCursor + 1;
+            while(rightCursor < sRules.length && sRules[rightCursor]) rightCursor++;
+            rightCursor--;
+
+            if (first) {first = false;}
+            else {str.append(",");}
+
+            if (rightCursor == leftCursor) str.append(leftCursor);
+            else if (rightCursor == leftCursor + 1) str.append(leftCursor).append(",").append(rightCursor);
+            else str.append(leftCursor).append("-").append(rightCursor);
+
+            leftCursor = rightCursor + 1;
+        }
+
+
+        str.append(",B");
+        leftCursor = 0;
+        first = true;
+
+        while (leftCursor < bRules.length) {
+            while (leftCursor < bRules.length && !bRules[leftCursor]) leftCursor++;
+            if (leftCursor == bRules.length) break;
+
+            rightCursor = leftCursor + 1;
+            while(rightCursor < bRules.length && bRules[rightCursor]) rightCursor++;
+            rightCursor--;
+
+            if (first) {first = false;}
+            else {str.append(",");}
+
+            if (rightCursor == leftCursor) str.append(leftCursor);
+            else if (rightCursor == leftCursor + 1) str.append(leftCursor).append(",").append(rightCursor);
+            else str.append(leftCursor).append("-").append(rightCursor);
+
+            leftCursor = rightCursor + 1;
+        }
+
+        this.ruleString = str.toString();
     }
 
     public LifeformLTL(String name, String rulestring, Color color) {

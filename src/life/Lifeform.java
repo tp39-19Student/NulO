@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 
 abstract public class Lifeform {
     abstract protected void initRules(String ruleString);
+    abstract protected void standardizeRulestring();
     abstract protected NeighbourhoodType getNeighbourhoodType();
 
     public static final int MAX_RANGE = 5;
@@ -36,6 +37,7 @@ abstract public class Lifeform {
     public Lifeform(String name, String rulestring, Color color) {
         this.name = name;
         this.initRules(rulestring);
+        this.standardizeRulestring();
         this.id = generateId(this.ruleString);
         if (color == null) color = colorFromId();
         initColors(color);
@@ -165,15 +167,30 @@ abstract public class Lifeform {
         return new Color(red, green, blue);
     }
 
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof Lifeform)) return false;
+
+        Lifeform life = (Lifeform)o;
+        return life.id == this.id;
+    }
+
     public static Lifeform GOL = Lifeform.create("Conway's Life", "B3/S23");
-    public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23");
-    public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678");
-    public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12");
+    public static Lifeform BB = Lifeform.create("Brian's Brain", "B2/S/C3");
+    //public static Lifeform PEDL = Lifeform.create("Pedestrian Life", "B38/S23");
+    //public static Lifeform DAN = Lifeform.create("Day and Night", "B3678/S34678");
+    //public static Lifeform FLCK = Lifeform.create("Flock", "B3/S12");
     public static Lifeform LWD = Lifeform.create("Life without Death", "B3/S012345678");
 
     public static Lifeform STW6 = Lifeform.create("Like Starwars", "B278/S3456/6");
     public static Lifeform FRWK = Lifeform.create("Fireworks", "B13/S2/C21");
-    public static Lifeform FLME = Lifeform.create("Flame", "R2, C5, S8-10, B5-7");
+    public static Lifeform FLME = Lifeform.create("Flame", "R2, C5, S8-10, B5,6-7");
 
     public static Lifeform BUGS = Lifeform.create("Bosco's Rule", "R5,C2,S33-57,B34-45");
     public static Lifeform MAJ = Lifeform.create("Majority", "R4,C2,S40-80,B41-81");

@@ -191,9 +191,9 @@ public class Cell
         }
     }
 
-    public void updateCommit() { setCell(); }
+    public void updateCommit() { updateCell(); }
 
-    private void setCell() {
+    private void updateCell() {
         if (nextLife != null || nextState != this.state) {
             this.dirty = true;
 
@@ -212,10 +212,8 @@ public class Cell
         }
     }
 
-    public void setCell(Lifeform life) {
-        setCell(life, false);
-    }
-    public void setCell(Lifeform life, boolean force) {
+
+    public void setCell(Lifeform life, int state, boolean force) {
         if (!force) {
             if (life != null && this.life != null) return;
             if (life == this.life) return;
@@ -224,8 +222,27 @@ public class Cell
         if (life == null) {
             this.nextState = 0;
             this.change = (this.state == 1)?-1:0;
-        } else this.change = ((this.state != 1)?1:0);
-        setCell();
+        } else{
+            if (state != -1) {
+                this.nextState = state;
+                if (this.state != 1 && this.nextState == 1) this.change = 1;
+                else if (this.state == 1 && this.nextState != 1) this.change = -1;
+                else this.change = 0;
+            }
+            else {
+                this.change = ((this.state != 1)?1:0);
+                this.nextState = 1;
+            }
+        }
+
+        this.state = this.nextState;
+        this.life = this.nextLife;
+        this.nextLife = null;
+
+        notifyNeighbours(this.change);
+        this.change = 0;
+        this.nextColor = getColor();
+        this.dirty = true;
     }
 
     private List<Map.Entry<Lifeform, Integer>> findMates() {
@@ -309,4 +326,5 @@ public class Cell
     }
 
     public Lifeform getLife() { return this.life; }
+    public int getState() { return this.state; }
 }

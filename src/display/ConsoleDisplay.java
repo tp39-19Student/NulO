@@ -3,6 +3,7 @@ package display;
 import logic.Console;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -35,6 +36,8 @@ public class ConsoleDisplay extends JPanel {
         JScrollPane scroll = new JScrollPane(this.text);
         this.textScroll = scroll.getVerticalScrollBar();
         scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUI(new CustomScrollBarUI(consoleBackgroundColor, consoleTextColor));
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         this.add(scroll, BorderLayout.CENTER);
 
         this.input = new JTextArea();
@@ -63,6 +66,8 @@ public class ConsoleDisplay extends JPanel {
 
         scroll = new JScrollPane(this.input);
         scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUI(new CustomScrollBarUI(consoleBackgroundColor, consoleTextColor));
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         this.add(scroll, BorderLayout.SOUTH);
 
         //this.setBackground(consoleInputBackgroundColor);
@@ -72,6 +77,7 @@ public class ConsoleDisplay extends JPanel {
 
     public void println(String line) {
         this.text.append(line + '\n');
+        System.out.println(line);
         textScroll.setValue(textScroll.getMaximum());
     }
 

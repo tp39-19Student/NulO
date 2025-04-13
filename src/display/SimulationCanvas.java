@@ -34,9 +34,16 @@ public class SimulationCanvas extends JPanel {
     private boolean crazy = false;
     private int buttonPressed = -1;
 
-    //Pattern
+    //Pattern Placing
     private Pattern loadedPattern;
     private int patternState; // 0 - None, 1 - Loaded, 2 - Finished (Block Brush)
+
+    //Pattern Capturing
+    private int captureStartX;
+    private int captureStartY;
+    private int captureEndX;
+    private int captureEndY;
+    private int captureState; // -1 - Canceled (Block Brush), 0 - None, 1 - Ready, 2 - Dragging
 
     //Zoom / Pan (Cell Indexes)
     private int drawXStart;
@@ -49,6 +56,7 @@ public class SimulationCanvas extends JPanel {
         super();
         this.loadedPattern = null;
         this.patternState = 0;
+        this.captureState = 0;
         this.setBackground(Color.BLACK);
         SimulationCanvas c = this;
         this.addComponentListener(new ComponentAdapter() {
@@ -76,6 +84,17 @@ public class SimulationCanvas extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 super.mouseReleased(e);
                 if (patternState == 0) loadedPattern = null;
+                if (captureState == 2) {
+                    Pattern p = Pattern.capture(sim.getData(), captureStartX, captureEndX, captureStartY, captureEndY);
+                    if (p != null) {
+                        MainFrame.getInstance().addPattern(p);
+                        setLoadedPattern(p);
+                    } else {
+                        MainFrame.getInstance().getConsole().println("Capture failed");
+                    }
+                    repaint();
+                }
+                captureState = 0;
             }
 
             @Override
@@ -85,6 +104,19 @@ public class SimulationCanvas extends JPanel {
 
                 boolean shift = (e.getModifiers() & Event.SHIFT_MASK) != 0;
                 buttonPressed = e.getButton();
+
+                if (captureState == 1) {
+                    if (buttonPressed == MouseEvent.BUTTON1) {
+                        captureStartX = e.getX()/pixelSize + drawXStart;
+                        captureStartY = e.getY()/pixelSize + drawYStart;
+                        captureEndX = captureStartX + 1;
+                        captureEndY = captureStartY + 1;
+                        captureState = 2;
+                    } else {
+                        captureState = -1;
+                    }
+                    return;
+                }
 
                 if (patternState == 1) {
                     if (buttonPressed == MouseEvent.BUTTON1) {
@@ -128,6 +160,28 @@ public class SimulationCanvas extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 super.mouseDragged(e);
+                if (captureState == 2) {
+                    captureEndX = e.getX()/pixelSize + drawXStart;
+                    if (captureEndX >= captureStartX) captureEndX++;
+
+                    if (captureEndX < drawXStart) captureEndX = drawXStart;
+                    else if (captureEndX > drawXEnd) captureEndX = drawXEnd;
+
+
+                    captureEndY = e.getY()/pixelSize + drawYStart;
+                    if (captureEndY >= captureStartY) captureEndY++;
+
+                    if (captureEndY < drawYStart) captureEndY = drawYStart;
+                    if (captureEndY > drawYEnd) captureEndY = drawYEnd;
+
+
+
+
+
+                    repaint();
+                    return;
+                }
+                if (captureState != 0) { return; }
                 if (loadedPattern != null) {repaint(); return;}
                 boolean shift = (e.getModifiers() & Event.SHIFT_MASK) != 0;
                 if (buttonPressed != MouseEvent.BUTTON1 && buttonPressed != MouseEvent.BUTTON3) return;
@@ -215,6 +269,24 @@ public class SimulationCanvas extends JPanel {
                 for (int j = Math.max(mouseX, 0); j < Math.min(mouseX + loadedPattern.getWidth(), this.simWidth); j++ ) {
                     data[i][j].repaintNextFrame();
                 }
+        }
+
+        // ====== Capture Preview ======
+        if (captureState == 2) {
+            g.setColor(Color.GRAY);
+            g.drawRect(
+                    (Math.min(captureStartX, captureEndX) - drawXStart)*pixelSize,
+                    (Math.min(captureStartY, captureEndY) - drawYStart)*pixelSize,
+                    Math.abs(captureEndX-captureStartX)*pixelSize - 1,
+                    Math.abs(captureEndY-captureStartY)*pixelSize - 1
+            );
+
+            for (int i = Math.min(captureStartY, captureEndY); i < Math.max(captureStartY, captureEndY); i++) {
+                 for (int j = Math.min(captureStartX, captureEndX); j < Math.max(captureStartX, captureEndX); j++) {
+                    //System.out.println("data[" + j + "][" + i + "]");
+                    data[i][j].repaintNextFrame();
+                }
+            }
         }
     }
 
@@ -324,7 +396,10 @@ public class SimulationCanvas extends JPanel {
     public int getPixelSize() {return pixelSize;}
     public Simulation getSimulation() { return sim; }
     public void setLifeformBrush(Lifeform life) { this.brush = life; }
-    public void setLoadedPattern(Pattern pattern) { this.patternState = 1; this.loadedPattern = pattern;  }
+    public void setLoadedPattern(Pattern pattern) { this.patternState = 1; this.loadedPattern = pattern; this.captureState = 0; }
+    public void startPatternCapture() {
+        this.captureState = 1; this.patternState = 0; this.loadedPattern = null;
+    }
 
     public int getDrawXStart() {return drawXStart;}
     public int getDrawXEnd() {return drawXEnd;}

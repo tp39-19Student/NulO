@@ -58,8 +58,12 @@ public class Simulation
     }
 
     public void setCell(int x, int y, Lifeform life, boolean force) {
+        setCell(x, y, life, -1, force);
+    }
+
+    public void setCell(int x, int y, Lifeform life, int state, boolean force) {
         if (x < 0 || y < 0 || x >= data[0].length || y >= data.length) return;
-        data[y][x].setCell(life, force);
+        data[y][x].setCell(life, state, force);
     }
 
     public void nextFrame() {

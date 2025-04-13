@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LifeformLifelike extends Lifeform {
-    public static Pattern rulePattern = Pattern.compile("B([0-8]*)/S([0-8]*)", Pattern.CASE_INSENSITIVE);
+    public static Pattern rulePattern = Pattern.compile("B?([0-8]*)/S?([0-8]*)", Pattern.CASE_INSENSITIVE);
 
     @Override
     protected NeighbourhoodType getNeighbourhoodType() {
@@ -23,11 +23,12 @@ public class LifeformLifelike extends Lifeform {
     protected void initRules(String ruleString) {
         this.range = 1;
         this.states = 1;
+        boolean sbNotation = ruleString.charAt(0) != 'B';
         Matcher m = rulePattern.matcher(ruleString);
 
         if (m.matches()) {
-            String group1 = m.group(1);
-            String group2 = m.group(2);
+            String group1 = sbNotation?m.group(2):m.group(1);
+            String group2 = sbNotation?m.group(1):m.group(2);
 
             this.sRules = new boolean[10];
             this.bRules = new boolean[10];
@@ -39,5 +40,20 @@ public class LifeformLifelike extends Lifeform {
         } else {
             this.ruleString = "";
         }
+    }
+
+    @Override
+    protected void standardizeRulestring() {
+        StringBuilder str = new StringBuilder();
+
+        str.append("B");
+        for (int i = 0; i < 10; i++) {if (bRules[i]) str.append(i);}
+
+        str.append("/");
+
+        str.append("S");
+        for (int i = 0; i < 10; i++) {if (sRules[i]) str.append(i);}
+
+        this.ruleString = str.toString();
     }
 }
