@@ -18,17 +18,23 @@ public class Pattern {
         int state;
         Color color;
 
+        CellState() {
+            this.life = null;
+            this.state = 0;
+            this.color = Color.BLACK;
+        }
+
         CellState(Lifeform life, int state) {
+            set(life, state);
+        }
+
+        void set(Lifeform life, int state) {
             this.life = life;
             this.state = state;
             if (life != null) {
                 this.color = life.getColor(state - 1);
             } else this.color = Color.BLACK;
-
         }
-
-        CellState() {this(null, 0);}
-        CellState(Lifeform life) {this(life, 0);}
     };
 
 
@@ -192,6 +198,11 @@ public class Pattern {
         int height = Integer.parseInt(m.group(3));
 
         CellState[][] cells = new CellState[height][width];
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                cells[y][x] = new CellState();
+            }
+
         int cellXCursor;
         int cellYCursor = 0;
 
@@ -204,7 +215,7 @@ public class Pattern {
                 while (lineCursor < line.length) {
                     int count = 0;
                     while(lineCursor < line.length && Character.isDigit(line[lineCursor])) count = (count * 10) + (line[lineCursor++] - '0');
-                    if (lineCursor == line.length) {
+                    if (lineCursor == line.length) {    //Multiple $
                         cellYCursor += (count - 1);
                         break;
                     }
@@ -221,19 +232,15 @@ public class Pattern {
                         else {MainFrame.log("Pattern invalid"); return null;}
                     }
 
-
                     lineCursor++;
 
                     for (int j = 0; j < count; j++) {
-                        if (type == 0) {
-                            cells[cellYCursor][cellXCursor] = new CellState(null, 0);
-                        } else {
-                            cells[cellYCursor][cellXCursor] = new CellState(lifeform, type);
+                        if (type != 0) {
+                            cells[cellYCursor][cellXCursor].set(lifeform, type);
                         }
                         cellXCursor++;
                     }
                 }
-                while (cellXCursor < width) cells[cellYCursor][cellXCursor++] = new CellState(null, 0);
                 cellYCursor++;
             }
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -264,9 +271,9 @@ public class Pattern {
             int j = 0;
             for (; j < line.length(); j++) {
                 if (line.charAt(j) != '.') cells[i][j] = new CellState(lifeform, 1);
-                else cells[i][j] = new CellState(null, 0);
+                else cells[i][j] = new CellState();
             }
-            while (j < width) cells[i][j++] = new CellState(null, 0);
+            while (j < width) cells[i][j++] = new CellState();
         }
 
         return new Pattern(width, height, cells, 1, false);
