@@ -248,10 +248,12 @@ public class SimulationCanvas extends JPanel {
         Point mousePosition = MouseInfo.getPointerInfo().getLocation();
         int mouseX = ((mousePosition.x - this.getLocationOnScreen().x)/pixelSize) + drawXStart;
         int mouseY = ((mousePosition.y - this.getLocationOnScreen().y)/pixelSize) + drawYStart;
-        if (mouseX >= drawXStart && mouseX < drawXEnd && mouseY >= drawYStart && mouseY < drawYEnd) {
-            g.setColor(brush.getColor());
-            g.drawRect((mouseX - drawXStart)*pixelSize, (mouseY - drawYStart)*pixelSize, pixelSize-1, pixelSize-1);
-            data[mouseY][mouseX].repaintNextFrame();
+        if (brush != null) {
+            if (mouseX >= drawXStart && mouseX < drawXEnd && mouseY >= drawYStart && mouseY < drawYEnd) {
+                g.setColor(brush.getColor());
+                g.drawRect((mouseX - drawXStart)*pixelSize, (mouseY - drawYStart)*pixelSize, pixelSize-1, pixelSize-1);
+                data[mouseY][mouseX].repaintNextFrame();
+            }
         }
 
         // ====== Extra Space ======

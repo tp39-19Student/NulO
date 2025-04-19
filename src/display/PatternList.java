@@ -203,7 +203,7 @@ public class PatternList {
         dialog.setVisible(true);
     }
 
-    public void addPattern(Pattern p) {this.patternListModel.addElement(p); this.patternList.revalidate();}
+    public void addPattern(Pattern p) {this.patternListModel.addElement(p); this.patternList.revalidate(); this.patternList.repaint();}
     public void showImport() {showImportPatternDialog();}
     public void showList() {this.savedPatternsDialog.setVisible(true);}
 }
